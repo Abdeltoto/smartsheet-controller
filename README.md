@@ -35,7 +35,7 @@
 
 **73 Smartsheet tools · 80 formulas · 5 LLM providers · 246 green tests · Full voice control · One conversation.**
 
-The first AI agent that *speaks Smartsheet fluently*.
+A community-built AI agent that *speaks the Smartsheet API fluently* — built for developers and power-users.
 Read, write, analyze, automate, share, and visualize — by just asking.
 **BYOT** (bring your own token) · server-side memory · audit log · real-time webhooks · MCP-ready.
 
