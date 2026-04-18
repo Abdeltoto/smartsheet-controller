@@ -39,6 +39,8 @@ The first AI agent that *speaks Smartsheet fluently*.
 Read, write, analyze, automate, share, and visualize — by just asking.
 **BYOT** (bring your own token) · server-side memory · audit log · real-time webhooks · MCP-ready.
 
+<sub>Built on top of the official [@smartsheet](https://github.com/smartsheet) REST API v2.0 — community project, **not affiliated with Smartsheet Inc.**</sub>
+
 <br />
 
 [Quick Start](#-quick-start) · [The Power](#-the-power) · [What You Can Say](#-what-you-can-say) · [73 Tools](#-every-tool-at-your-voice) · [MCP Server](#-mcp-server) · [Tests](#-running-the-test-suite) · [Deploy](#-deployment)
@@ -774,6 +776,8 @@ server {
 
 | | |
 |---|---|
+| **Smartsheet — official GitHub org** | [@smartsheet](https://github.com/smartsheet) (verified, SDKs Python · JS · Java · C#) |
+| **Smartsheet Platform — DevRel GitHub** | [@smartsheet-platform](https://github.com/smartsheet-platform) (incl. their own [MCP server](https://github.com/smartsheet-platform/smar-mcp)) |
 | **Smartsheet API Docs** | [smartsheet.redoc.ly](https://smartsheet.redoc.ly/) |
 | **Smartsheet Developer Portal** | [developers.smartsheet.com](https://developers.smartsheet.com/) |
 | **Smartsheet Functions** | [help.smartsheet.com/functions](https://help.smartsheet.com/functions) |
@@ -802,6 +806,8 @@ server {
 <br />
 
 Built with [FastAPI](https://fastapi.tiangolo.com) · [Smartsheet API](https://smartsheet.redoc.ly/) · [OpenAI](https://openai.com) · [Anthropic](https://anthropic.com) · [OpenRouter](https://openrouter.ai) · [Mistral](https://mistral.ai) · [Groq](https://groq.com) · [MCP](https://modelcontextprotocol.io)
+
+<sub>Smartsheet® and the Smartsheet logo are trademarks of [Smartsheet Inc.](https://www.smartsheet.com) ([@smartsheet](https://github.com/smartsheet)). This project is an independent community tool and is not endorsed by or affiliated with Smartsheet Inc.</sub>
 
 <br />
 
