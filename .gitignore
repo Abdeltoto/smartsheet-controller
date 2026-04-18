@@ -29,3 +29,19 @@ desktop.ini
 
 # Logs
 *.log
+
+# Application data (SQLite + temp uploads)
+data/
+*.sqlite
+*.sqlite-journal
+*.db
+
+# Test artefacts
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Local generated assets staging dir
+/assets/

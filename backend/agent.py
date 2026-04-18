@@ -1,7 +1,10 @@
 import json
+import logging
 from backend.llm_router import LLMRouter
 from backend.smartsheet_client import SmartsheetClient
-from backend.tools import TOOL_DEFINITIONS, execute_tool
+from backend.tools import TOOL_DEFINITIONS, execute_tool, select_tools_for_message
+
+log = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = r"""You are **Smartsheet Expert**, the most advanced Smartsheet consultant. You know EVERY function, feature, and capability of Smartsheet. You NEVER reference Excel, Google Sheets, or any other tool. You speak EXCLUSIVELY in Smartsheet terms, syntax, and concepts. Warm, professional, proactive. Adapt language to the user's (FR->FR, EN->EN). Handle voice-dictated messages naturally.
 
@@ -10,9 +13,14 @@ SYSTEM_PROMPT = r"""You are **Smartsheet Expert**, the most advanced Smartsheet 
 {columns_desc}
 {sample_data}
 Other sheets: {other_sheets}
+NOTE: For large sheets, use `read_rows` with `max_rows` param (up to 5000) if you need more data.
 
 ## RULES
 - "my sheet"/"this sheet" = {sheet_id}. Read before write. Verify after. Ask before deleting.
+- **Cite precisely**: when referring to a row, ALWAYS use the format `row #<rowNumber> (<primary column value>)`, e.g. "row #1234 (Project Alpha)". When referring to a column, use `[Column Name]` with the actual title. Never say "a row" or "one of the cells" without identifiers.
+- **Clarify before acting**: if the request is ambiguous (which sheet? which row? which column? overwrite vs append?), ASK ONE precise question before calling any write tool. Reading tools (`get_sheet_summary`, `read_rows`, `analyze_sheet`) may be used freely to disambiguate.
+- **For multi-step requests** (≥3 distinct actions), present a numbered plan FIRST and wait/proceed with checkmarks (✓ done, → current, ☐ pending) between tool calls. Single-step queries skip the plan.
+- **Sampling notice**: if a tool result contains a `sampling` field, mention to the user that the analysis is based on a sample and suggest `read_rows` for an exact count on a specific range.
 
 ## COMPLETE SMARTSHEET FUNCTION CATALOG (official, 80 functions)
 
@@ -50,18 +58,24 @@ Refs use `{{Name}}` syntax -- must be created first.
 
 **Column types**: TEXT_NUMBER, DATE, DATETIME, CONTACT_LIST, CHECKBOX, PICKLIST (single/multi-select), DURATION ("5d","2w"), PREDECESSOR. Primary col = TEXT_NUMBER, undeletable.
 **Views**: Grid, Gantt (DURATION+START+PREDECESSOR), Calendar (DATE cols), Card/Kanban (PICKLIST/CONTACT grouping).
-**Automations**: Triggers (row change, date, schedule, form) -> Actions (notify, approve, move/copy row, set cell, lock, record date). API read-only -- guide manual setup.
+**Automations**: Triggers (row change, date, schedule, form) -> Actions (notify, approve, move/copy row, set cell, lock, record date). API supports list/get/update/delete; CREATE must be done in the UI (use `update_automation`/`delete_automation` tools).
 **Reports**: Multi-sheet row aggregation + filters. Sheet Summary Reports. Read-only -- edits go to source.
 **Dashboards**: Metric/Chart/Report/RichText/Image/Shortcut/WebContent/Title widgets. Live data.
-**Forms**: Data entry mapped to columns. Conditional field logic.
-**Workspaces/Folders**: Team containers with cascading permissions.
-**Proofing, Cell history, Row locking, Conditional formatting**: all available.
+**Forms**: Data entry mapped to columns. Conditional field logic. API exposure is limited — `list_sheet_forms` falls back to the sheet permalink.
+**Workspaces/Folders**: Team containers with cascading permissions. Use `share_workspace` to grant access on every sheet inside at once.
+**Proofs (Premium)**: review workflows on a row. Use `list_row_proofs` / `create_row_proof_from_url`.
+**Update requests**: ask any email to fill specific row(s) — use `create_update_request` (NOT comments).
+**Attachments**: links from Drive/Dropbox/OneDrive/web via `attach_url_to_sheet` / `attach_url_to_row`. Binary upload exists but requires the user to provide bytes.
+**Cell linking** (`create_cell_link`): one-way live link from a source cell. DIFFERENT from cross-sheet references (which are formula ingredients via `{{Name}}`).
+**Webhooks**: `update_webhook` enables/disables or changes events without delete + recreate.
+**Cell history, Row locking, Conditional formatting**: all available (read-only via API).
 
 ## OUTPUT FORMAT
 - **Use Markdown tables** whenever presenting structured data (rows, comparisons, summaries, column lists, formula references). Tables are rendered beautifully in the chat UI.
 - Use **bold**, *italic*, `code`, headings (##, ###), bullet lists, numbered lists freely.
 - For formulas, always wrap in backticks: `=SUMIFS(...)`.
-- When the user asks for a visual, diagram, chart, illustration, or any image: use the `generate_image` tool with a detailed English prompt. The image will display inline in chat.
+- When the user asks for a chart, graph, or data visualization: use the `generate_chart` tool with chart_type, labels, and datasets. The chart renders inline in the chat.
+- When the user asks for an artistic image, illustration, or photo: use the `generate_image` tool with a detailed English prompt.
 
 ## BEHAVIOR -- ALWAYS
 1. **Propose with impact**: business value of each suggestion.
@@ -76,6 +90,22 @@ At the VERY END of EVERY response, add a line starting with `[SUGGESTIONS]` foll
 `[SUGGESTIONS] Analyser les erreurs | Ajouter une colonne | Voir les permissions`"""
 
 MAX_TOOL_ROUNDS = 25
+MAX_TOOL_RESULT_CHARS = 3000
+MAX_HISTORY_MESSAGES = 40
+
+DESTRUCTIVE_TOOLS = {
+    "delete_rows", "delete_sheet", "delete_column", "delete_share",
+    "delete_webhook", "update_rows", "add_rows", "move_rows",
+    "copy_rows", "move_sheet", "sort_sheet", "share_sheet",
+    "rename_sheet",
+    # Sprint 6 additions
+    "delete_attachment", "delete_automation", "update_automation",
+    "delete_update_request", "create_update_request",
+    "share_workspace", "update_workspace_share", "delete_workspace_share",
+    "create_cell_link", "update_webhook",
+    "attach_url_to_sheet", "attach_url_to_row",
+    "create_row_proof_from_url",
+}
 
 
 def _fmt_cols(columns: list[dict]) -> str:
@@ -109,6 +139,7 @@ class Agent:
         self.smartsheet = smartsheet
         self.sheet_id = sheet_id
         self.sheet_context = sheet_context or {}
+        self.pinned_sheets: list[dict] = []
 
     def _build_system_prompt(self) -> str:
         summary = self.sheet_context.get("summary", {})
@@ -116,7 +147,7 @@ class Agent:
         sample_rows = self.sheet_context.get("sample_rows", [])
         all_sheets = self.sheet_context.get("all_sheets", [])
 
-        return SYSTEM_PROMPT.format(
+        prompt = SYSTEM_PROMPT.format(
             sheet_id=self.sheet_id,
             sheet_name=summary.get("name", "Unknown"),
             total_rows=summary.get("totalRowCount", "?"),
@@ -125,6 +156,16 @@ class Agent:
             sample_data=_fmt_sample(sample_rows),
             other_sheets=_fmt_sheets(all_sheets, self.sheet_id),
         )
+
+        if self.pinned_sheets:
+            pinned_ctx = "\n\n## PINNED SECONDARY SHEETS\n"
+            for ps in self.pinned_sheets:
+                s = ps.get("summary", {})
+                pinned_ctx += f"- **{s.get('name', '?')}** (ID: {ps['id']}) — {s.get('totalRowCount', '?')} rows, {s.get('columnCount', '?')} cols: {_fmt_cols(s.get('columns', []))}\n"
+            pinned_ctx += "Use the sheet_id parameter on tools to operate on these sheets.\n"
+            prompt += pinned_ctx
+
+        return prompt
 
     @staticmethod
     def _extract_suggestions(text: str) -> tuple[str, list[str]]:
@@ -141,16 +182,45 @@ class Agent:
         clean_text = "\n".join(clean_lines).rstrip()
         return clean_text, suggestions
 
-    async def run(self, messages: list[dict], on_event=None):
+    @staticmethod
+    def _prune_messages(messages: list[dict]) -> list[dict]:
+        if len(messages) <= MAX_HISTORY_MESSAGES:
+            return messages
+        kept = messages[-MAX_HISTORY_MESSAGES:]
+        if kept and kept[0]["role"] == "tool_result":
+            kept = kept[1:]
+        return kept
+
+    @staticmethod
+    def _truncate_result(result: str) -> str:
+        if len(result) <= MAX_TOOL_RESULT_CHARS:
+            return result
+        return result[:MAX_TOOL_RESULT_CHARS] + "\n\n... [truncated — full result was " + str(len(result)) + " chars]"
+
+    async def run(self, messages: list[dict], on_event=None, confirm_callback=None):
         system = self._build_system_prompt()
+
+        # Tool subsetting: classify the latest user message once, then keep
+        # the same toolset for all rounds in this turn. Reduces tokens 50-70%
+        # on read-only queries.
+        last_user_msg = ""
+        for m in reversed(messages):
+            if m.get("role") == "user":
+                content = m.get("content", "")
+                last_user_msg = content if isinstance(content, str) else ""
+                break
+        tools_subset = select_tools_for_message(last_user_msg)
+        log.debug("Tool subset: %d/%d tools selected for intent",
+                  len(tools_subset), len(TOOL_DEFINITIONS))
 
         for _round in range(MAX_TOOL_ROUNDS):
             full_content = ""
             tool_calls_response = None
+            pruned = self._prune_messages(messages)
 
             async for chunk in self.llm.chat_stream(
-                messages=messages,
-                tools=TOOL_DEFINITIONS,
+                messages=pruned,
+                tools=tools_subset,
                 system=system,
             ):
                 if chunk["type"] == "stream_delta":
@@ -177,6 +247,35 @@ class Agent:
                 if on_event:
                     await on_event({"type": "tool_call", "name": tc["name"], "arguments": tc["arguments"]})
 
+                # Recover gracefully from LLM emitting malformed JSON arguments
+                if isinstance(tc["arguments"], dict) and tc["arguments"].get("__parse_error__"):
+                    err = tc["arguments"]["__parse_error__"]
+                    raw = tc["arguments"].get("__raw__", "")
+                    messages.append({
+                        "role": "tool_result",
+                        "tool_call_id": tc["id"],
+                        "content": json.dumps({
+                            "error": "INVALID_JSON",
+                            "message": f"The arguments you sent were not valid JSON ({err}). Please call the tool again with a strictly valid JSON object matching the schema.",
+                            "received_preview": raw,
+                        }),
+                    })
+                    if on_event:
+                        await on_event({"type": "tool_result", "name": tc["name"], "result": f"Invalid JSON arguments — agent will retry. ({err})"})
+                    continue
+
+                if confirm_callback and tc["name"] in DESTRUCTIVE_TOOLS:
+                    approved = await confirm_callback(tc["name"], tc["arguments"], tc["id"])
+                    if not approved:
+                        messages.append({
+                            "role": "tool_result",
+                            "tool_call_id": tc["id"],
+                            "content": json.dumps({"status": "rejected", "message": "User rejected this action."}),
+                        })
+                        if on_event:
+                            await on_event({"type": "tool_result", "name": tc["name"], "result": "Action rejected by user."})
+                        continue
+
                 result = await execute_tool(self.smartsheet, tc["name"], tc["arguments"])
 
                 if on_event:
@@ -188,6 +287,11 @@ class Agent:
                                 "url": parsed["image_url"],
                                 "caption": parsed.get("revised_prompt", ""),
                             })
+                        elif isinstance(parsed, dict) and parsed.get("__is_chart__"):
+                            await on_event({
+                                "type": "chart",
+                                "spec": parsed["chart_spec"],
+                            })
                     except (json.JSONDecodeError, KeyError):
                         pass
                     preview = result[:500] + "..." if len(result) > 500 else result
@@ -196,7 +300,7 @@ class Agent:
                 messages.append({
                     "role": "tool_result",
                     "tool_call_id": tc["id"],
-                    "content": result,
+                    "content": self._truncate_result(result),
                 })
 
         final = "I've reached the maximum number of tool calls. Please continue with a follow-up message."
