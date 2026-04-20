@@ -106,6 +106,24 @@ CREATE TABLE IF NOT EXISTS webhook_events (
     delivered INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_webhook_events_user ON webhook_events(user_id, received_at DESC);
+
+CREATE TABLE IF NOT EXISTS bug_reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,           -- nullable: bug can be reported pre-login
+    session_id TEXT,           -- ephemeral session id (for traceability)
+    sheet_id TEXT,
+    reporter_email TEXT,       -- snapshot at time of report (may differ from current)
+    reporter_name TEXT,
+    description TEXT NOT NULL,
+    steps TEXT,                -- "what were you doing" optional
+    severity TEXT NOT NULL DEFAULT 'normal',  -- low / normal / high / blocker
+    context_json TEXT,         -- raw client-side context bundle (metrics, last messages, ua, ...)
+    status TEXT NOT NULL DEFAULT 'open',      -- open / triaged / fixed / wontfix
+    created_at REAL NOT NULL,
+    updated_at REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_bug_reports_status ON bug_reports(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bug_reports_user ON bug_reports(user_id, created_at DESC);
 """
 
 _initialized = False
@@ -460,6 +478,130 @@ def _list_webhook_events_sync(user_id: int, limit: int = 50, since: float = 0.0)
 
 async def list_webhook_events(user_id: int, limit: int = 50, since: float = 0.0) -> list[dict]:
     return await asyncio.to_thread(_list_webhook_events_sync, user_id, limit, since)
+
+
+# ─────────────── Bug reports ───────────────
+
+_BUG_VALID_SEVERITY = {"low", "normal", "high", "blocker"}
+_BUG_VALID_STATUS = {"open", "triaged", "fixed", "wontfix"}
+
+
+def _create_bug_report_sync(
+    user_id: int | None,
+    session_id: str | None,
+    sheet_id: str | None,
+    reporter_email: str | None,
+    reporter_name: str | None,
+    description: str,
+    steps: str | None,
+    severity: str,
+    context: dict | None,
+) -> int:
+    now = time.time()
+    if severity not in _BUG_VALID_SEVERITY:
+        severity = "normal"
+    ctx_json = json.dumps(context, default=str) if context else None
+    with _conn() as c:
+        cur = c.execute(
+            """INSERT INTO bug_reports
+               (user_id, session_id, sheet_id, reporter_email, reporter_name,
+                description, steps, severity, context_json, status,
+                created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?, 'open', ?, ?)""",
+            (
+                user_id, session_id, sheet_id, reporter_email, reporter_name,
+                description, steps, severity, ctx_json, now, now,
+            ),
+        )
+        return cur.lastrowid
+
+
+async def create_bug_report(
+    *,
+    user_id: int | None,
+    session_id: str | None,
+    sheet_id: str | None,
+    reporter_email: str | None,
+    reporter_name: str | None,
+    description: str,
+    steps: str | None,
+    severity: str = "normal",
+    context: dict | None = None,
+) -> int:
+    return await asyncio.to_thread(
+        _create_bug_report_sync, user_id, session_id, sheet_id,
+        reporter_email, reporter_name, description, steps, severity, context,
+    )
+
+
+def _list_bug_reports_sync(
+    status: str | None = None,
+    limit: int = 200,
+    offset: int = 0,
+) -> list[dict]:
+    with _conn() as c:
+        if status and status in _BUG_VALID_STATUS:
+            rows = c.execute(
+                "SELECT * FROM bug_reports WHERE status = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+                (status, limit, offset),
+            ).fetchall()
+        else:
+            rows = c.execute(
+                "SELECT * FROM bug_reports ORDER BY created_at DESC LIMIT ? OFFSET ?",
+                (limit, offset),
+            ).fetchall()
+        out: list[dict] = []
+        for r in rows:
+            d = dict(r)
+            raw_ctx = d.get("context_json")
+            if raw_ctx:
+                try:
+                    d["context"] = json.loads(raw_ctx)
+                except json.JSONDecodeError:
+                    d["context"] = None
+            else:
+                d["context"] = None
+            d.pop("context_json", None)
+            out.append(d)
+        return out
+
+
+async def list_bug_reports(
+    status: str | None = None, limit: int = 200, offset: int = 0,
+) -> list[dict]:
+    return await asyncio.to_thread(_list_bug_reports_sync, status, limit, offset)
+
+
+def _count_bug_reports_sync(status: str | None = None) -> int:
+    with _conn() as c:
+        if status and status in _BUG_VALID_STATUS:
+            return int(c.execute(
+                "SELECT COUNT(*) AS n FROM bug_reports WHERE status = ?",
+                (status,),
+            ).fetchone()["n"])
+        return int(c.execute(
+            "SELECT COUNT(*) AS n FROM bug_reports"
+        ).fetchone()["n"])
+
+
+async def count_bug_reports(status: str | None = None) -> int:
+    return await asyncio.to_thread(_count_bug_reports_sync, status)
+
+
+def _update_bug_report_status_sync(report_id: int, new_status: str) -> bool:
+    if new_status not in _BUG_VALID_STATUS:
+        return False
+    now = time.time()
+    with _conn() as c:
+        cur = c.execute(
+            "UPDATE bug_reports SET status = ?, updated_at = ? WHERE id = ?",
+            (new_status, now, report_id),
+        )
+        return cur.rowcount > 0
+
+
+async def update_bug_report_status(report_id: int, new_status: str) -> bool:
+    return await asyncio.to_thread(_update_bug_report_status_sync, report_id, new_status)
 
 
 # ─────────────── Export full account (RGPD) ───────────────

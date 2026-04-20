@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompts library — Smartsheet Controller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #060B18;
+    --bg: #0A1228;
+    --surface: rgba(15, 23, 50, 0.7);
+    --surface-solid: #0F1732;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+    --border: rgba(255,255,255,0.06);
+    --text: #E8ECF4;
+    --text-secondary: #A1ADCC;
+    --text-muted: #7E8AA8;
+    --accent: #3B82F6;
+    --accent-light: #60A5FA;
+    --accent2: #8B5CF6;
+    --success: #10B981;
+    --error: #EF4444;
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --sidebar-w: 280px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg-deep) radial-gradient(ellipse at top, rgba(96,165,250,0.08), transparent 60%);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.55;
+  }
+  a { color: var(--accent-light); text-decoration: none; }
+  a:hover { color: #93C5FD; }
+
+  /* ── Header ── */
+  header.help-header {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px);
+    background: rgba(10, 18, 40, 0.78);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 14px 28px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+  .logo-mark {
+    width: 36px; height: 36px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; flex-shrink: 0;
+  }
+  .header-titles h1 {
+    font-size: 18px; font-weight: 700; margin: 0; letter-spacing: -0.01em;
+  }
+  .header-titles .subtitle {
+    font-size: 12px; color: var(--text-muted); margin: 0;
+  }
+  .header-search {
+    flex: 1 1 280px; max-width: 480px; position: relative;
+  }
+  .header-search input {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 9px 14px 9px 36px;
+    color: var(--text); font-size: 13px; font-family: inherit;
+  }
+  .header-search input:focus {
+    outline: none; border-color: var(--accent-light);
+    box-shadow: 0 0 0 2px rgba(96,165,250,0.18);
+  }
+  .header-search svg {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); pointer-events: none;
+  }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600;
+    padding: 8px 14px; border-radius: var(--radius);
+    border: 1px solid rgba(96,165,250,0.25); background: rgba(96,165,250,0.08);
+    color: var(--accent-light); transition: background 0.15s;
+  }
+  .back-link:hover { background: rgba(96,165,250,0.16); }
+
+  /* ── Layout ── */
+  .help-layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    gap: 28px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 28px 28px 80px;
+  }
+  @media (max-width: 900px) {
+    .help-layout { grid-template-columns: 1fr; }
+    aside.sidebar { position: static; }
+  }
+
+  aside.sidebar {
+    position: sticky; top: 80px;
+    align-self: start;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    background: rgba(15,23,50,0.55);
+    padding: 16px;
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+  }
+  .sidebar h2 {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted);
+    margin: 0 6px 10px;
+  }
+  .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar a.cat-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: var(--radius-sm);
+    color: var(--text-secondary); font-size: 13px; font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar a.cat-link:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .sidebar a.cat-link.is-active {
+    background: rgba(96,165,250,0.12); color: var(--accent-light);
+  }
+  .sidebar a.cat-link .ic {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: rgba(96,165,250,0.12); color: var(--accent-light);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .sidebar a.cat-link .count {
+    margin-left: auto; font-size: 11px; color: var(--text-muted);
+    background: rgba(255,255,255,0.05); padding: 1px 7px; border-radius: 8px;
+  }
+
+  /* ── Main ── */
+  main.help-main { min-width: 0; }
+  .intro-card {
+    border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(96,165,250,0.06), rgba(15,23,50,0.4));
+    padding: 22px 24px; margin-bottom: 24px;
+  }
+  .intro-card h2 {
+    font-size: 22px; font-weight: 700; margin: 0 0 6px;
+    background: linear-gradient(135deg, var(--accent-light), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .intro-card p { margin: 0; color: var(--text-secondary); font-size: 13.5px; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px;
+  }
+  .legend-item {
+    font-size: 11.5px; color: var(--text-secondary);
+    padding: 4px 10px; border-radius: 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+  }
+  .legend-item strong { color: var(--text); margin-right: 4px; }
+
+  section.category-section {
+    margin: 36px 0 0;
+    scroll-margin-top: 96px;
+  }
+  section.category-section h3 {
+    font-size: 18px; font-weight: 700; margin: 0 0 4px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  section.category-section h3 .ic {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(96,165,250,0.14); color: var(--accent-light);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  section.category-section .cat-desc {
+    margin: 0 0 16px 44px;
+    font-size: 13px; color: var(--text-secondary);
+  }
+
+  .prompt-card {
+    border: 1px solid var(--glass-border); border-radius: var(--radius);
+    background: rgba(255,255,255,0.025); padding: 14px 16px;
+    margin: 10px 0; transition: border-color 0.15s, background 0.15s;
+  }
+  .prompt-card:hover { border-color: rgba(96,165,250,0.3); background: rgba(255,255,255,0.04); }
+  .prompt-card-head {
+    display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .prompt-card-title {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    margin: 0; flex: 1 1 240px; min-width: 0;
+  }
+  .badges { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+  .badge {
+    font-size: 10.5px; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px; letter-spacing: 0.02em;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .badge--easy        { background: rgba(16,185,129,0.14); color: #34D399; border-color: rgba(16,185,129,0.3); }
+  .badge--medium      { background: rgba(251,191,36,0.14); color: #FBBF24; border-color: rgba(251,191,36,0.3); }
+  .badge--advanced    { background: rgba(139,92,246,0.18); color: #A78BFA; border-color: rgba(139,92,246,0.3); }
+  .badge--safe        { background: rgba(96,165,250,0.14); color: #60A5FA; border-color: rgba(96,165,250,0.3); }
+  .badge--caution     { background: rgba(245,158,11,0.14); color: #FCD34D; border-color: rgba(245,158,11,0.3); }
+  .badge--destructive { background: rgba(239,68,68,0.14); color: #F87171; border-color: rgba(239,68,68,0.3); }
+  .prompt-desc {
+    font-size: 12.5px; color: var(--text-secondary);
+    margin: 4px 0 10px; line-height: 1.55;
+  }
+  .prompt-pre {
+    background: rgba(0,0,0,0.32); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    margin: 0 0 10px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 12px; line-height: 1.6;
+    color: var(--text-secondary);
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 320px; overflow: auto;
+  }
+  .prompt-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; font-family: inherit;
+    padding: 7px 13px; border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.04); color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(96,165,250,0.3); }
+  .btn.is-success { color: #34D399; border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .tag {
+    font-size: 10px; font-weight: 500; color: var(--text-muted);
+    padding: 1px 7px; border-radius: 8px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  }
+
+  .empty, .loading, .error {
+    text-align: center; padding: 32px 16px; font-size: 13px;
+    color: var(--text-muted);
+    border: 1px dashed var(--glass-border); border-radius: var(--radius);
+    margin: 16px 0;
+  }
+  .error { color: #F87171; border-color: rgba(239,68,68,0.3); }
+
+  .hidden { display: none !important; }
+
+  footer.help-footer {
+    text-align: center; color: var(--text-muted); font-size: 12px;
+    padding: 32px 16px 16px; border-top: 1px solid var(--border);
+    margin-top: 60px;
+  }
+</style>
+</head>
+<body>
+<header class="help-header">
+  <div class="header-left">
+    <span class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    </span>
+    <div class="header-titles">
+      <h1>Prompts library</h1>
+      <p class="subtitle">Copy-paste recipes for talking to your sheets.</p>
+    </div>
+  </div>
+  <div class="header-search">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" id="search" placeholder="Search prompts (title, description, tag)…" autocomplete="off" oninput="filterPrompts(this.value)" aria-label="Search prompts" />
+  </div>
+  <a class="back-link" href="/" title="Back to the app">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Back to app
+  </a>
+</header>
+
+<div class="help-layout">
+  <aside class="sidebar" id="sidebar">
+    <h2>Categories</h2>
+    <nav id="sidebar-nav"><div class="loading">Loading…</div></nav>
+  </aside>
+
+  <main class="help-main">
+    <div class="intro-card">
+      <h2>Talk to your sheet — better.</h2>
+      <p id="intro-text">Loading the catalogue…</p>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div id="content"><div class="loading">Loading prompts…</div></div>
+    <footer class="help-footer">
+      Source of truth: <code>frontend/data/prompts.json</code>. Edits go live without restart.
+    </footer>
+  </main>
+</div>
+
+<script>
+const ICONS = {
+  search:  '<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>',
+  rows:    '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  columns: '<line x1="6" y1="3" x2="6" y2="21"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/>',
+  link:    '<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',
+  sigma:   '<path d="M18 4H6l7 8-7 8h12"/>',
+  users:   '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+  bolt:    '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+  wrench:  '<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94L9 17.59a2 2 0 11-2.83-2.83l5.12-5.12a6 6 0 017.94-7.94l-3.76 3.76z"/>',
+};
+function icon(name, size = 16) {
+  const inner = ICONS[name] || ICONS.search;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+}
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+let CATALOGUE = null;
+
+async function load() {
+  try {
+    const res = await fetch('/api/prompts', { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    CATALOGUE = await res.json();
+    render(CATALOGUE);
+  } catch (err) {
+    document.getElementById('content').innerHTML =
+      `<div class="error">Could not load the catalogue: ${esc(err.message || err)}</div>`;
+    document.getElementById('sidebar-nav').innerHTML = '';
+    document.getElementById('intro-text').textContent = '';
+  }
+}
+
+function render(cat) {
+  if (!cat || !Array.isArray(cat.categories)) {
+    document.getElementById('content').innerHTML = `<div class="error">Catalogue malformed.</div>`;
+    return;
+  }
+  if (cat.intro) document.getElementById('intro-text').textContent = cat.intro;
+
+  const legend = cat.legend || {};
+  const legendHtml = [];
+  if (legend.difficulty) {
+    Object.entries(legend.difficulty).forEach(([k, v]) => {
+      legendHtml.push(`<span class="legend-item"><span class="badge badge--${esc(k)}">${esc(k)}</span><strong style="margin-left:6px">·</strong>${esc(v)}</span>`);
+    });
+  }
+  if (legend.risk) {
+    Object.entries(legend.risk).forEach(([k, v]) => {
+      legendHtml.push(`<span class="legend-item"><span class="badge badge--${esc(k)}">${esc(k)}</span><strong style="margin-left:6px">·</strong>${esc(v)}</span>`);
+    });
+  }
+  document.getElementById('legend').innerHTML = legendHtml.join('');
+
+  const navHtml = cat.categories.map(c => {
+    const id = esc(c.id);
+    const count = Array.isArray(c.prompts) ? c.prompts.length : 0;
+    return `
+      <a class="cat-link" href="#cat-${id}" data-cat-id="${id}">
+        <span class="ic">${icon(c.icon || 'search', 14)}</span>
+        <span>${esc(c.title)}</span>
+        <span class="count">${count}</span>
+      </a>
+    `;
+  }).join('');
+  document.getElementById('sidebar-nav').innerHTML = navHtml;
+
+  const contentHtml = cat.categories.map(c => {
+    const prompts = Array.isArray(c.prompts) ? c.prompts : [];
+    const cards = prompts.map(p => renderCard(p, c)).join('');
+    return `
+      <section class="category-section" id="cat-${esc(c.id)}" data-cat-id="${esc(c.id)}">
+        <h3><span class="ic">${icon(c.icon || 'search', 18)}</span>${esc(c.title)}</h3>
+        ${c.description ? `<p class="cat-desc">${esc(c.description)}</p>` : ''}
+        ${cards || '<div class="empty">No prompts in this category yet.</div>'}
+      </section>
+    `;
+  }).join('');
+  document.getElementById('content').innerHTML = contentHtml;
+
+  installScrollSpy();
+}
+
+function renderCard(p, c) {
+  if (!p || !p.prompt) return '';
+  const title = esc(p.title || '(untitled)');
+  const desc  = esc(p.description || '');
+  const diff  = (p.difficulty || '').toLowerCase();
+  const risk  = (p.risk || '').toLowerCase();
+  const tags  = Array.isArray(p.tags) ? p.tags : [];
+  const badges = [];
+  if (diff) badges.push(`<span class="badge badge--${esc(diff)}" title="Difficulty">${esc(diff)}</span>`);
+  if (risk) badges.push(`<span class="badge badge--${esc(risk)}" title="Risk">${esc(risk)}</span>`);
+  const tagsHtml = tags.length
+    ? `<div class="tags">${tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>`
+    : '';
+  const haystack = esc(
+    [title, desc, p.id, c && c.title, c && c.id, ...tags].filter(Boolean).join(' ').toLowerCase()
+  );
+  return `
+    <div class="prompt-card" data-haystack="${haystack}">
+      <div class="prompt-card-head">
+        <h4 class="prompt-card-title">${title}</h4>
+        <div class="badges">${badges.join('')}</div>
+      </div>
+      ${desc ? `<p class="prompt-desc">${desc}</p>` : ''}
+      <pre class="prompt-pre" data-prompt-text>${esc(p.prompt)}</pre>
+      ${tagsHtml}
+      <div class="prompt-actions">
+        <button type="button" class="btn" onclick="copyPrompt(this)" title="Copy to clipboard">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+async function copyPrompt(btn) {
+  const card = btn.closest('.prompt-card');
+  if (!card) return;
+  const pre = card.querySelector('[data-prompt-text]');
+  const text = pre ? pre.textContent : '';
+  if (!text) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } finally { document.body.removeChild(ta); }
+    }
+    const orig = btn.innerHTML;
+    btn.classList.add('is-success');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Copied';
+    setTimeout(() => { btn.classList.remove('is-success'); btn.innerHTML = orig; }, 1500);
+  } catch (e) {
+    alert('Could not copy: ' + (e.message || e));
+  }
+}
+
+function filterPrompts(query) {
+  const q = (query || '').trim().toLowerCase();
+  document.querySelectorAll('.category-section').forEach(sec => {
+    let visible = 0;
+    sec.querySelectorAll('.prompt-card').forEach(card => {
+      const hay = card.getAttribute('data-haystack') || '';
+      const match = !q || hay.includes(q);
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    sec.style.display = (q && visible === 0) ? 'none' : '';
+  });
+}
+
+function installScrollSpy() {
+  const links = Array.from(document.querySelectorAll('.cat-link'));
+  const sections = Array.from(document.querySelectorAll('.category-section'));
+  if (!('IntersectionObserver' in window)) return;
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const id = e.target.getAttribute('data-cat-id');
+      links.forEach(l => l.classList.toggle('is-active', l.getAttribute('data-cat-id') === id));
+    });
+  }, { rootMargin: '-30% 0px -60% 0px', threshold: 0.01 });
+  sections.forEach(s => obs.observe(s));
+}
+
+load();
+</script>
+</body>
+</html>

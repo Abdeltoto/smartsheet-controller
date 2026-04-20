@@ -32,6 +32,9 @@ desktop.ini
 
 # Application data (SQLite + temp uploads)
 data/
+# Static catalogues shipped with the app (Help / Prompts library, etc.)
+!frontend/data/
+!frontend/data/**
 *.sqlite
 *.sqlite-journal
 *.db

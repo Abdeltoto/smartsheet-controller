@@ -2290,6 +2290,286 @@
   }
   .modal-close:hover { color: var(--text); }
 
+  /* ═══════ Bug-report modal ═══════ */
+  .header-btn--bug:hover { color: #FBBF24; }
+  .bug-modal-intro {
+    font-size: 12.5px; color: var(--text-secondary);
+    line-height: 1.5; margin: -6px 0 18px;
+  }
+  .bug-field {
+    display: block; margin-bottom: 14px;
+  }
+  .bug-label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--text); margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+  .bug-required { color: #F87171; font-weight: 700; }
+  .bug-optional { color: var(--text-muted); font-weight: 400; font-size: 11px; }
+  .bug-modal textarea {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 10px 12px;
+    color: var(--text); font-size: 13px;
+    font-family: inherit; line-height: 1.5;
+    resize: vertical; min-height: 60px;
+  }
+  .bug-modal textarea:focus {
+    outline: none; border-color: var(--accent-light);
+    box-shadow: 0 0 0 2px rgba(96,165,250,0.18);
+  }
+  .bug-counter {
+    display: block; text-align: right; font-size: 10.5px;
+    color: var(--text-muted); margin-top: 2px;
+  }
+  .bug-severity-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bug-sev {
+    flex: 1 1 70px; cursor: pointer; user-select: none;
+  }
+  .bug-sev input { position: absolute; opacity: 0; pointer-events: none; }
+  .bug-sev span {
+    display: block; text-align: center;
+    padding: 6px 8px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-secondary);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .bug-sev input:checked + span {
+    background: rgba(96,165,250,0.16);
+    border-color: var(--accent-light);
+    color: var(--text);
+  }
+  .bug-sev input:focus-visible + span {
+    box-shadow: 0 0 0 2px rgba(96,165,250,0.4);
+  }
+  .bug-context-details {
+    margin: 6px 0 14px; font-size: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+  }
+  .bug-context-details > summary {
+    cursor: pointer; padding: 8px 12px;
+    color: var(--text-muted); font-weight: 500;
+  }
+  .bug-context-details[open] > summary { color: var(--text); }
+  .bug-context-pre {
+    margin: 0; padding: 10px 12px;
+    max-height: 220px; overflow: auto;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 11px; line-height: 1.5;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--glass-border);
+    background: rgba(0,0,0,0.18);
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .bug-actions {
+    display: flex; gap: 8px; justify-content: flex-end;
+    margin-top: 8px;
+  }
+  .bug-btn {
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text); font-size: 13px; font-weight: 600;
+    padding: 8px 16px; border-radius: var(--radius);
+    cursor: pointer; font-family: inherit;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .bug-btn:hover { background: rgba(255,255,255,0.08); }
+  .bug-btn--primary {
+    background: var(--accent); border-color: var(--accent);
+    color: #fff;
+  }
+  .bug-btn--primary:hover { background: var(--accent-light); border-color: var(--accent-light); }
+  .bug-btn--primary:disabled { opacity: 0.6; cursor: progress; }
+  .bug-btn--ghost { background: transparent; }
+  .bug-feedback {
+    margin-top: 10px; font-size: 12px; min-height: 16px;
+  }
+  .bug-feedback.is-success { color: #34D399; }
+  .bug-feedback.is-error { color: #F87171; }
+
+  /* ═══════ Help / Prompts library modal ═══════ */
+  .header-btn--help:hover { color: #34D399; }
+  .help-modal {
+    max-width: 880px; width: 95%; max-height: 86vh;
+    padding: 0; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .help-modal-head {
+    padding: 18px 24px 14px; border-bottom: 1px solid var(--glass-border);
+    background: linear-gradient(180deg, rgba(96,165,250,0.06), transparent);
+  }
+  .help-modal-title-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 6px;
+  }
+  .help-modal-title {
+    font-size: 16px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 10px; margin: 0;
+  }
+  .help-modal-title svg { color: var(--accent-light); }
+  .help-modal-spacer { flex: 1; }
+  .help-fullpage-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: var(--accent-light);
+    text-decoration: none; padding: 6px 10px; border-radius: var(--radius);
+    border: 1px solid rgba(96,165,250,0.25); background: rgba(96,165,250,0.06);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .help-fullpage-link:hover { background: rgba(96,165,250,0.14); border-color: var(--accent-light); }
+  .help-modal-intro {
+    font-size: 12.5px; color: var(--text-secondary);
+    line-height: 1.5; margin: 0 0 12px;
+  }
+  .help-search-wrap { position: relative; }
+  .help-search-input {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 10px 14px 10px 38px;
+    color: var(--text); font-size: 13px; font-family: inherit;
+  }
+  .help-search-input:focus {
+    outline: none; border-color: var(--accent-light);
+    box-shadow: 0 0 0 2px rgba(96,165,250,0.18);
+  }
+  .help-search-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); pointer-events: none;
+  }
+  .help-search-clear {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; padding: 4px; border-radius: 4px;
+  }
+  .help-search-clear:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .help-modal-body {
+    overflow-y: auto; padding: 8px 16px 18px;
+    flex: 1 1 auto; scroll-behavior: smooth;
+  }
+  .help-empty {
+    text-align: center; padding: 40px 16px;
+    color: var(--text-muted); font-size: 13px;
+  }
+
+  .help-category {
+    margin: 8px 0; border-radius: var(--radius);
+    background: transparent;
+  }
+  .help-category-head {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border); border-radius: var(--radius);
+    cursor: pointer; color: var(--text);
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    text-align: left; transition: background 0.15s, border-color 0.15s;
+  }
+  .help-category-head:hover { background: rgba(255,255,255,0.06); border-color: rgba(96,165,250,0.25); }
+  .help-category-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(96,165,250,0.12); color: var(--accent-light);
+    flex-shrink: 0;
+  }
+  .help-category-meta { flex: 1; min-width: 0; }
+  .help-category-title { display: block; }
+  .help-category-desc {
+    display: block; font-size: 11.5px; font-weight: 400;
+    color: var(--text-muted); margin-top: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .help-category-count {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    background: rgba(255,255,255,0.05); padding: 2px 8px;
+    border-radius: 10px; flex-shrink: 0;
+  }
+  .help-chevron {
+    color: var(--text-muted); flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+  .help-category.is-open .help-chevron { transform: rotate(90deg); }
+  .help-category-body {
+    display: none; padding: 6px 4px 4px;
+  }
+  .help-category.is-open .help-category-body { display: block; }
+
+  .help-prompt {
+    border: 1px solid var(--glass-border); border-radius: var(--radius);
+    background: rgba(255,255,255,0.02); padding: 12px 14px;
+    margin: 8px 0; transition: border-color 0.15s, background 0.15s;
+  }
+  .help-prompt:hover { border-color: rgba(96,165,250,0.3); background: rgba(255,255,255,0.04); }
+  .help-prompt-head {
+    display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .help-prompt-title {
+    font-size: 13.5px; font-weight: 600; color: var(--text);
+    margin: 0; flex: 1 1 200px; min-width: 0;
+  }
+  .help-prompt-badges {
+    display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap;
+  }
+  .help-badge {
+    font-size: 10.5px; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px; letter-spacing: 0.02em;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .help-badge--easy        { background: rgba(16,185,129,0.14); color: #34D399; border-color: rgba(16,185,129,0.3); }
+  .help-badge--medium      { background: rgba(251,191,36,0.14); color: #FBBF24; border-color: rgba(251,191,36,0.3); }
+  .help-badge--advanced    { background: rgba(139,92,246,0.18); color: #A78BFA; border-color: rgba(139,92,246,0.3); }
+  .help-badge--safe        { background: rgba(96,165,250,0.14); color: #60A5FA; border-color: rgba(96,165,250,0.3); }
+  .help-badge--caution     { background: rgba(245,158,11,0.14); color: #FCD34D; border-color: rgba(245,158,11,0.3); }
+  .help-badge--destructive { background: rgba(239,68,68,0.14); color: #F87171; border-color: rgba(239,68,68,0.3); }
+  .help-prompt-desc {
+    font-size: 12px; color: var(--text-secondary);
+    margin: 4px 0 8px; line-height: 1.5;
+  }
+  .help-prompt-pre {
+    background: rgba(0,0,0,0.25); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 12px;
+    margin: 0 0 8px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 11.5px; line-height: 1.55;
+    color: var(--text-secondary);
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 220px; overflow: auto;
+  }
+  .help-prompt-actions {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .help-action-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; font-weight: 600; font-family: inherit;
+    padding: 6px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text); cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .help-action-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(96,165,250,0.3); }
+  .help-action-btn--primary {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  .help-action-btn--primary:hover { background: var(--accent-light); border-color: var(--accent-light); }
+  .help-action-btn.is-success { color: #34D399; border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); }
+
+  .help-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .help-tag {
+    font-size: 10px; font-weight: 500; color: var(--text-muted);
+    padding: 1px 7px; border-radius: 8px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  }
+
+  .help-loading, .help-error {
+    text-align: center; padding: 32px 16px; font-size: 13px;
+    color: var(--text-muted);
+  }
+  .help-error { color: #F87171; }
+
   /* ═══════ Watch Mode / Notifications ═══════ */
   .toast-notification {
     position: fixed; top: 80px; right: 24px; z-index: 1001;
@@ -2920,12 +3200,29 @@
       <div class="watch-popover-hint">You'll be notified in-app whenever rows are added, removed, or modified.</div>
     </div>
 
+    <!-- Help / Prompts library -->
+    <button class="header-btn header-btn--help" id="btn-help" onclick="openHelpModal()" title="Help &amp; prompts library (Ctrl+Shift+L)" aria-label="Help and prompts library">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+        <path d="M9 7h7M9 11h5"/>
+      </svg>
+    </button>
+
     <!-- Shortcuts help -->
     <button class="header-btn" id="btn-shortcuts" onclick="toggleShortcutsModal()" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/>
         <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
         <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </button>
+
+    <!-- Report a bug -->
+    <button class="header-btn header-btn--bug" id="btn-bug-report" onclick="openBugReportModal()" title="Report a bug" aria-label="Report a bug">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="8" y="6" width="8" height="14" rx="4"/>
+        <path d="M19 7l-3 2M5 7l3 2M19 13h-3M5 13h3M19 19l-3-2M5 19l3-2M12 6V3"/>
       </svg>
     </button>
 
@@ -3551,7 +3848,105 @@
     <div class="shortcut-row"><span class="shortcut-label">Export Markdown</span><div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">E</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Export PDF</span><div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">P</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Toggle history</span><div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">H</span></div></div>
+    <div class="shortcut-row"><span class="shortcut-label">Report a bug</span><div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">B</span></div></div>
+    <div class="shortcut-row"><span class="shortcut-label">Open prompts library</span><div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">L</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Show shortcuts</span><div class="shortcut-keys"><span class="kbd">?</span></div></div>
+  </div>
+</div>
+
+<!-- ═══════ Bug Report Modal ═══════ -->
+<div class="modal-overlay hidden" id="bug-report-modal" role="dialog" aria-modal="true" aria-labelledby="bug-report-title" onclick="if(event.target===this)closeBugReportModal()">
+  <div class="modal-box bug-modal" style="position:relative; max-width:560px;">
+    <button class="modal-close" onclick="closeBugReportModal()" aria-label="Close bug report">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h3 id="bug-report-title">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="8" y="6" width="8" height="14" rx="4"/>
+        <path d="M19 7l-3 2M5 7l3 2M19 13h-3M5 13h3M19 19l-3-2M5 19l3-2M12 6V3"/>
+      </svg>
+      Report a bug
+    </h3>
+    <p class="bug-modal-intro">
+      Spot something off? Paste the error or describe what happened. We
+      automatically attach the current sheet, last few messages and a
+      lightweight technical context — no need to retype them.
+    </p>
+
+    <form id="bug-report-form" onsubmit="event.preventDefault(); submitBugReport();">
+      <label class="bug-field">
+        <span class="bug-label">Severity</span>
+        <div class="bug-severity-row" role="radiogroup" aria-label="Severity">
+          <label class="bug-sev"><input type="radio" name="bug-severity" value="low"><span>Low</span></label>
+          <label class="bug-sev"><input type="radio" name="bug-severity" value="normal" checked><span>Normal</span></label>
+          <label class="bug-sev"><input type="radio" name="bug-severity" value="high"><span>High</span></label>
+          <label class="bug-sev"><input type="radio" name="bug-severity" value="blocker"><span>Blocker</span></label>
+        </div>
+      </label>
+
+      <label class="bug-field">
+        <span class="bug-label">What happened? <span class="bug-required">*</span></span>
+        <textarea id="bug-description" rows="5" required maxlength="8000"
+          placeholder="Paste the exact error message or describe the bug. The more concrete, the faster we can fix it."></textarea>
+        <span class="bug-counter" id="bug-desc-counter">0 / 8000</span>
+      </label>
+
+      <label class="bug-field">
+        <span class="bug-label">Steps to reproduce <span class="bug-optional">(optional)</span></span>
+        <textarea id="bug-steps" rows="3" maxlength="4000"
+          placeholder="1. I clicked …&#10;2. Then I asked the agent to …&#10;3. I expected … but got …"></textarea>
+      </label>
+
+      <details class="bug-context-details">
+        <summary>Auto-attached context (click to inspect)</summary>
+        <pre id="bug-context-preview" class="bug-context-pre">(collected when you open this dialog)</pre>
+      </details>
+
+      <div class="bug-actions">
+        <button type="button" class="bug-btn bug-btn--ghost" onclick="closeBugReportModal()">Cancel</button>
+        <button type="submit" class="bug-btn bug-btn--primary" id="bug-submit-btn">
+          <span class="bug-submit-label">Send report</span>
+          <span class="bug-submit-spinner" hidden>…</span>
+        </button>
+      </div>
+      <div class="bug-feedback" id="bug-feedback" role="status" aria-live="polite"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════ Help / Prompts library Modal ═══════ -->
+<div class="modal-overlay hidden" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" onclick="if(event.target===this)closeHelpModal()">
+  <div class="modal-box help-modal" style="position:relative;">
+    <button class="modal-close" onclick="closeHelpModal()" aria-label="Close help">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="help-modal-head">
+      <div class="help-modal-title-row">
+        <h3 id="help-modal-title" class="help-modal-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+          </svg>
+          Prompts library
+        </h3>
+        <span class="help-modal-spacer"></span>
+        <a href="/help" target="_blank" rel="noopener" class="help-fullpage-link" title="Open the full help page in a new tab">
+          Open full page
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3h7v7"/><path d="M21 3l-9 9"/><path d="M21 14v5a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h5"/></svg>
+        </a>
+      </div>
+      <p id="help-modal-intro" class="help-modal-intro">Loading…</p>
+      <div class="help-search-wrap">
+        <svg class="help-search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="help-search" class="help-search-input" placeholder="Search prompts (title, description, tag)…" autocomplete="off" aria-label="Search prompts" oninput="filterHelpPrompts(this.value)" />
+        <button type="button" class="help-search-clear" id="help-search-clear" onclick="clearHelpSearch()" hidden aria-label="Clear search">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="help-modal-body" id="help-modal-body">
+      <div class="help-loading">Loading prompt catalogue…</div>
+    </div>
   </div>
 </div>
 
@@ -6097,6 +6492,10 @@ function initKeyboardShortcuts() {
       const tplOverlay = document.getElementById('template-editor-overlay');
       if (tplOverlay && !tplOverlay.classList.contains('hidden')) { closeTemplateEditor(); return; }
       if (isModalOpen) { toggleShortcutsModal(); return; }
+      const helpModal = document.getElementById('help-modal');
+      if (helpModal && !helpModal.classList.contains('hidden')) { closeHelpModal(); return; }
+      const bugModal = document.getElementById('bug-report-modal');
+      if (bugModal && !bugModal.classList.contains('hidden')) { closeBugReportModal(); return; }
       const settingsModal = document.getElementById('settings-modal');
       if (settingsModal && !settingsModal.classList.contains('hidden')) { toggleSettingsModal(); return; }
       const tourPop = document.getElementById('tour-popover');
@@ -6126,6 +6525,8 @@ function initKeyboardShortcuts() {
         case 'E': e.preventDefault(); exportConversation(); break;
         case 'P': e.preventDefault(); exportPDF(); break;
         case 'H': e.preventDefault(); toggleHistory(); break;
+        case 'B': e.preventDefault(); openBugReportModal(); break;
+        case 'L': e.preventDefault(); openHelpModal(); break;
       }
     }
   });
@@ -6142,6 +6543,421 @@ function toggleShortcutsModal() {
   const willOpen = modal.classList.contains('hidden');
   modal.classList.toggle('hidden');
   if (willOpen) trapFocus(modal); else releaseFocus('shortcuts-modal');
+}
+
+// ═══════ Bug Report Modal ═══════
+function _safe(get) { try { return get(); } catch { return null; } }
+
+function collectBugContext() {
+  // Lightweight, JSON-safe snapshot of useful client state.
+  const lastMessages = (() => {
+    try {
+      const arr = Array.isArray(conversationMessages) ? conversationMessages : [];
+      return arr.slice(-6).map(m => ({
+        role: m && m.role,
+        content: typeof m?.content === 'string' ? m.content.slice(0, 1200) : null,
+        ts: m && m.ts,
+      }));
+    } catch { return []; }
+  })();
+
+  return {
+    app: 'smartsheet-controller',
+    captured_at: new Date().toISOString(),
+    page_url: location.href,
+    user_agent: navigator.userAgent,
+    language: navigator.language,
+    viewport: { w: window.innerWidth, h: window.innerHeight },
+    session_id: _safe(() => sessionId) || null,
+    sheet_id: _safe(() => currentSheetId) || null,
+    conversation_id: _safe(() => currentConversationId) || null,
+    user: _safe(() => (currentUser ? {
+      email: currentUser.email,
+      first_name: currentUser.firstName || currentUser.first_name,
+      last_name: currentUser.lastName || currentUser.last_name,
+    } : null)),
+    last_messages: lastMessages,
+    is_agent_running: _safe(() => !!isAgentRunning),
+    ws_state: _safe(() => (ws ? ws.readyState : null)),
+  };
+}
+
+function openBugReportModal() {
+  const modal = document.getElementById('bug-report-modal');
+  if (!modal) return;
+  // Reset form state every open
+  const form = document.getElementById('bug-report-form');
+  if (form) form.reset();
+  const desc = document.getElementById('bug-description');
+  const counter = document.getElementById('bug-desc-counter');
+  if (desc && counter) {
+    counter.textContent = '0 / 8000';
+    desc.oninput = () => { counter.textContent = `${desc.value.length} / 8000`; };
+  }
+  const fb = document.getElementById('bug-feedback');
+  if (fb) { fb.textContent = ''; fb.className = 'bug-feedback'; }
+  // Refresh & show context preview
+  const ctx = collectBugContext();
+  const pre = document.getElementById('bug-context-preview');
+  if (pre) pre.textContent = JSON.stringify(ctx, null, 2);
+  // Stash on dataset so submit reads the EXACT same snapshot
+  modal.dataset.bugContext = JSON.stringify(ctx);
+  modal.classList.remove('hidden');
+  trapFocus(modal);
+  setTimeout(() => { if (desc) desc.focus(); }, 50);
+}
+
+function closeBugReportModal() {
+  const modal = document.getElementById('bug-report-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  releaseFocus('bug-report-modal');
+}
+
+async function submitBugReport() {
+  const modal = document.getElementById('bug-report-modal');
+  const desc = document.getElementById('bug-description');
+  const steps = document.getElementById('bug-steps');
+  const btn = document.getElementById('bug-submit-btn');
+  const fb = document.getElementById('bug-feedback');
+  const sevEl = document.querySelector('input[name="bug-severity"]:checked');
+  if (!desc || !btn || !fb) return;
+
+  const description = (desc.value || '').trim();
+  if (!description) {
+    fb.textContent = 'Please describe what happened.';
+    fb.className = 'bug-feedback is-error';
+    desc.focus();
+    return;
+  }
+
+  let context = {};
+  try { context = JSON.parse(modal.dataset.bugContext || '{}'); } catch {}
+
+  const payload = {
+    description,
+    steps: steps && steps.value ? steps.value.trim() : null,
+    severity: sevEl ? sevEl.value : 'normal',
+    session_id: _safe(() => sessionId) || null,
+    reporter_email: _safe(() => currentUser && currentUser.email) || null,
+    reporter_name: _safe(() => currentUser
+      ? [currentUser.firstName || currentUser.first_name,
+         currentUser.lastName || currentUser.last_name]
+        .filter(Boolean).join(' ').trim() || null
+      : null),
+    context,
+  };
+
+  btn.disabled = true;
+  const lbl = btn.querySelector('.bug-submit-label');
+  const spn = btn.querySelector('.bug-submit-spinner');
+  if (lbl) lbl.hidden = true;
+  if (spn) spn.hidden = false;
+  fb.textContent = '';
+  fb.className = 'bug-feedback';
+
+  try {
+    const res = await fetch('/api/bug-reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+    fb.textContent = `Thanks! Report #${data.id} sent — we'll take a look.`;
+    fb.className = 'bug-feedback is-success';
+    if (typeof showToast === 'function') showToast('Bug report sent — thank you!', 2400);
+    setTimeout(() => closeBugReportModal(), 1200);
+  } catch (err) {
+    fb.textContent = `Could not send the report: ${err.message || err}. Please retry.`;
+    fb.className = 'bug-feedback is-error';
+  } finally {
+    btn.disabled = false;
+    if (lbl) lbl.hidden = false;
+    if (spn) spn.hidden = true;
+  }
+}
+
+// ═══════ Help / Prompts library Modal ═══════
+//
+// Loads `frontend/data/prompts.json` via `/api/prompts`, renders
+// collapsible categories with prompt cards, and supports live
+// search + copy-to-clipboard + insert-into-chat. The catalogue is
+// cached in-memory after the first load so repeated openings stay
+// snappy. Failure to fetch falls back to an inline error message
+// rather than breaking the rest of the UI.
+
+let _helpCatalogue = null;
+let _helpLoaded = false;
+
+const HELP_ICON_SVG = {
+  search:  '<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>',
+  rows:    '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  columns: '<line x1="6" y1="3" x2="6" y2="21"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/>',
+  link:    '<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',
+  sigma:   '<path d="M18 4H6l7 8-7 8h12"/>',
+  users:   '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+  bolt:    '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+  wrench:  '<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94L9 17.59a2 2 0 11-2.83-2.83l5.12-5.12a6 6 0 017.94-7.94l-3.76 3.76z"/>',
+};
+
+function _helpIcon(name, size = 16) {
+  const inner = HELP_ICON_SVG[name] || HELP_ICON_SVG.search;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+}
+
+function _escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function loadHelpCatalogue(force = false) {
+  if (_helpLoaded && !force && _helpCatalogue) return _helpCatalogue;
+  try {
+    const res = await fetch('/api/prompts', { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    _helpCatalogue = await res.json();
+    _helpLoaded = true;
+    return _helpCatalogue;
+  } catch (err) {
+    _helpCatalogue = { _error: err.message || String(err) };
+    _helpLoaded = true;
+    return _helpCatalogue;
+  }
+}
+
+function renderHelpCatalogue(catalogue) {
+  const intro = document.getElementById('help-modal-intro');
+  const body  = document.getElementById('help-modal-body');
+  if (!body) return;
+
+  if (catalogue && catalogue._error) {
+    if (intro) intro.textContent = '';
+    body.innerHTML = `<div class="help-error">Could not load the prompt catalogue: ${_escapeHtml(catalogue._error)}.</div>`;
+    return;
+  }
+  if (!catalogue || !Array.isArray(catalogue.categories)) {
+    body.innerHTML = `<div class="help-error">Catalogue malformed.</div>`;
+    return;
+  }
+
+  if (intro && catalogue.intro) intro.textContent = catalogue.intro;
+
+  const totalPrompts = catalogue.categories.reduce(
+    (sum, c) => sum + (Array.isArray(c.prompts) ? c.prompts.length : 0), 0
+  );
+
+  const html = catalogue.categories.map((cat, idx) => {
+    const prompts = Array.isArray(cat.prompts) ? cat.prompts : [];
+    const cards = prompts.map(p => _renderPromptCard(p, cat)).join('');
+    const openCls = idx === 0 ? ' is-open' : '';
+    return `
+      <section class="help-category${openCls}" data-category-id="${_escapeHtml(cat.id)}">
+        <button type="button" class="help-category-head" onclick="toggleHelpCategory(this)" aria-expanded="${idx === 0 ? 'true' : 'false'}">
+          <span class="help-category-icon">${_helpIcon(cat.icon || 'search', 18)}</span>
+          <span class="help-category-meta">
+            <span class="help-category-title">${_escapeHtml(cat.title)}</span>
+            <span class="help-category-desc">${_escapeHtml(cat.description || '')}</span>
+          </span>
+          <span class="help-category-count">${prompts.length}</span>
+          <svg class="help-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        </button>
+        <div class="help-category-body">${cards || '<div class="help-empty">No prompts in this category yet.</div>'}</div>
+      </section>
+    `;
+  }).join('');
+
+  body.innerHTML = `
+    <div style="font-size:11.5px;color:var(--text-muted);padding:6px 4px 2px;">
+      ${totalPrompts} prompts across ${catalogue.categories.length} categories. Click a header to fold.
+    </div>
+    ${html}
+  `;
+}
+
+function _renderPromptCard(p, cat) {
+  if (!p || !p.prompt) return '';
+  const id    = _escapeHtml(p.id || '');
+  const title = _escapeHtml(p.title || '(untitled)');
+  const desc  = _escapeHtml(p.description || '');
+  const diff  = (p.difficulty || '').toLowerCase();
+  const risk  = (p.risk || '').toLowerCase();
+  const tags  = Array.isArray(p.tags) ? p.tags : [];
+
+  const badges = [];
+  if (diff) badges.push(`<span class="help-badge help-badge--${_escapeHtml(diff)}" title="Difficulty">${_escapeHtml(diff)}</span>`);
+  if (risk) badges.push(`<span class="help-badge help-badge--${_escapeHtml(risk)}" title="Risk">${_escapeHtml(risk)}</span>`);
+  const tagsHtml = tags.length
+    ? `<div class="help-tags">${tags.map(t => `<span class="help-tag">${_escapeHtml(t)}</span>`).join('')}</div>`
+    : '';
+
+  // Stash full prompt text on the dataset to avoid quoting hell in onclick.
+  const safePrompt = _escapeHtml(p.prompt);
+  const haystack = _escapeHtml(
+    [title, desc, p.id, cat && cat.title, cat && cat.id, ...tags].filter(Boolean).join(' ').toLowerCase()
+  );
+
+  return `
+    <div class="help-prompt" data-prompt-id="${id}" data-haystack="${haystack}">
+      <div class="help-prompt-head">
+        <h4 class="help-prompt-title">${title}</h4>
+        <div class="help-prompt-badges">${badges.join('')}</div>
+      </div>
+      ${desc ? `<p class="help-prompt-desc">${desc}</p>` : ''}
+      <pre class="help-prompt-pre" data-prompt-text>${safePrompt}</pre>
+      ${tagsHtml}
+      <div class="help-prompt-actions">
+        <button type="button" class="help-action-btn" onclick="copyHelpPrompt(this)" title="Copy to clipboard">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy
+        </button>
+        <button type="button" class="help-action-btn help-action-btn--primary" onclick="insertHelpPromptIntoChat(this)" title="Insert into chat input and close this dialog">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          Insert into chat
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleHelpCategory(btn) {
+  const cat = btn && btn.closest('.help-category');
+  if (!cat) return;
+  const willOpen = !cat.classList.contains('is-open');
+  cat.classList.toggle('is-open', willOpen);
+  btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+}
+
+function _getPromptText(actionBtn) {
+  const card = actionBtn && actionBtn.closest('.help-prompt');
+  if (!card) return '';
+  const pre = card.querySelector('[data-prompt-text]');
+  return pre ? pre.textContent : '';
+}
+
+async function copyHelpPrompt(btn) {
+  const text = _getPromptText(btn);
+  if (!text) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } finally { document.body.removeChild(ta); }
+    }
+    const orig = btn.innerHTML;
+    btn.classList.add('is-success');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Copied';
+    setTimeout(() => { btn.classList.remove('is-success'); btn.innerHTML = orig; }, 1500);
+    if (typeof showToast === 'function') showToast('Prompt copied to clipboard', 1400);
+  } catch (e) {
+    if (typeof showToast === 'function') showToast('Could not copy: ' + (e.message || e), 2400);
+  }
+}
+
+function insertHelpPromptIntoChat(btn) {
+  const text = _getPromptText(btn);
+  if (!text) return;
+  const input = document.getElementById('user-input');
+  if (!input) {
+    // Fallback: copy to clipboard so the user can paste it elsewhere.
+    copyHelpPrompt(btn);
+    if (typeof showToast === 'function') showToast('Chat input not available — copied instead', 2400);
+    return;
+  }
+  // Append (do not overwrite) to preserve any draft the user typed.
+  const existing = (input.value || '').trim();
+  input.value = existing ? `${existing}\n\n${text}` : text;
+  closeHelpModal();
+  // Trigger any auto-resize wired on the textarea.
+  try { input.dispatchEvent(new Event('input', { bubbles: true })); } catch {}
+  setTimeout(() => {
+    input.focus();
+    try {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input.setSelectionRange(input.value.length, input.value.length);
+    } catch {}
+  }, 80);
+  if (typeof showToast === 'function') showToast('Prompt inserted — review the placeholders before sending', 2200);
+}
+
+function filterHelpPrompts(query) {
+  const q = (query || '').trim().toLowerCase();
+  const body = document.getElementById('help-modal-body');
+  const clearBtn = document.getElementById('help-search-clear');
+  if (clearBtn) clearBtn.hidden = !q;
+  if (!body) return;
+
+  const cards = body.querySelectorAll('.help-prompt');
+  const cats  = body.querySelectorAll('.help-category');
+
+  if (!q) {
+    cards.forEach(c => c.style.display = '');
+    cats.forEach((c, i) => {
+      c.style.display = '';
+      // Restore the default fold state: only first category open.
+      c.classList.toggle('is-open', i === 0);
+      const head = c.querySelector('.help-category-head');
+      if (head) head.setAttribute('aria-expanded', i === 0 ? 'true' : 'false');
+    });
+    return;
+  }
+
+  cats.forEach(cat => {
+    let visibleCount = 0;
+    cat.querySelectorAll('.help-prompt').forEach(card => {
+      const hay = card.getAttribute('data-haystack') || '';
+      const match = hay.includes(q);
+      card.style.display = match ? '' : 'none';
+      if (match) visibleCount++;
+    });
+    cat.style.display = visibleCount === 0 ? 'none' : '';
+    // Force-open categories that have matches so the user sees results.
+    cat.classList.toggle('is-open', visibleCount > 0);
+    const head = cat.querySelector('.help-category-head');
+    if (head) head.setAttribute('aria-expanded', visibleCount > 0 ? 'true' : 'false');
+  });
+}
+
+function clearHelpSearch() {
+  const input = document.getElementById('help-search');
+  if (input) input.value = '';
+  filterHelpPrompts('');
+  if (input) input.focus();
+}
+
+async function openHelpModal() {
+  const modal = document.getElementById('help-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  trapFocus(modal);
+  // Reset search every open
+  const input = document.getElementById('help-search');
+  if (input) input.value = '';
+  const clearBtn = document.getElementById('help-search-clear');
+  if (clearBtn) clearBtn.hidden = true;
+
+  if (!_helpLoaded || !_helpCatalogue) {
+    const body = document.getElementById('help-modal-body');
+    if (body) body.innerHTML = '<div class="help-loading">Loading prompt catalogue…</div>';
+    const cat = await loadHelpCatalogue();
+    renderHelpCatalogue(cat);
+  } else {
+    renderHelpCatalogue(_helpCatalogue);
+  }
+  setTimeout(() => { if (input) input.focus(); }, 80);
+}
+
+function closeHelpModal() {
+  const modal = document.getElementById('help-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  releaseFocus('help-modal');
 }
 
 // ═══════ Focus trap (a11y) ═══════

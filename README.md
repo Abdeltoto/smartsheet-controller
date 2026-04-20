@@ -702,6 +702,47 @@ asserts that the harness intercepts the mistake **and** the follow-up correction
 
 ---
 
+## In-app Bug Reports
+
+Once the app is in your team's hands, the fastest way to keep improving it is to make reporting bugs **friction-free**. Every page now has a
+🐛 **Report a bug** button in the header (also available via <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>). Clicking it opens a modal that:
+
+- Lets the reporter pick a **severity** (Low / Normal / High / Blocker).
+- Asks for a free-text description of what happened (required) and optional reproduction steps.
+- **Auto-attaches** a JSON context bundle: current `session_id`, `sheet_id`, conversation id, last 6 messages, agent metrics snapshot, browser
+  user-agent, viewport size, WebSocket state, LLM provider/model — so you don't have to play 20 questions to reproduce.
+- Posts to `POST /api/bug-reports` (no auth required: a bug can occur at the login screen).
+
+Reports are stored two ways for safety:
+
+1. **SQLite** — table `bug_reports` (status: `open` / `triaged` / `fixed` / `wontfix`).
+2. **JSONL append-only mirror** — `data/bug_reports.jsonl`, configurable via `BUG_REPORTS_JSONL_PATH`. Survives DB resets.
+
+To read or triage reports, set an admin token in your `.env`:
+
+```env
+BUG_REPORTS_ADMIN_TOKEN=pick-a-long-random-secret
+```
+
+> Without this env var the admin endpoints are **disabled** (always 403). No risk of leaking reports if you forget.
+
+```bash
+# List the 50 most recent open bugs
+curl -H "X-Admin-Token: $BUG_REPORTS_ADMIN_TOKEN" \
+     "http://localhost:8000/api/bug-reports?status=open&limit=50"
+
+# Mark report #12 as fixed
+curl -X POST -H "X-Admin-Token: $BUG_REPORTS_ADMIN_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"status":"fixed"}' \
+     http://localhost:8000/api/bug-reports/12/status
+```
+
+The feature is covered by **22 dedicated tests** in `tests/unit/test_bug_reports.py` (DB CRUD, validation, server-side context enrichment, admin
+gate, JSONL mirror, status transitions).
+
+---
+
 ## Running the Test Suite
 
 <div align="center">

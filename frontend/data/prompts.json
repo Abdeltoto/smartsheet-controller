@@ -1,0 +1,335 @@
+{
+  "version": 1,
+  "updated_at": "2026-04-20",
+  "intro": "Copy any prompt below into the chat — or click 'Insert' to drop it into the input. Tweak the placeholders in <angle brackets> to match your sheet, then send.",
+  "legend": {
+    "difficulty": {
+      "easy": "Single tool call, no setup needed.",
+      "medium": "Multiple steps; the agent will likely ask for confirmation.",
+      "advanced": "Multi-sheet, formulas, or batch operations. Read the agent's plan carefully."
+    },
+    "risk": {
+      "safe": "Read-only — never modifies your sheet.",
+      "caution": "Modifies data; reversible from Smartsheet history if needed.",
+      "destructive": "Deletes data, removes shares, or changes structure permanently."
+    }
+  },
+  "categories": [
+    {
+      "id": "exploration",
+      "title": "Exploration & diagnostic",
+      "icon": "search",
+      "description": "Understand what's in a sheet without changing anything. Always a safe first step.",
+      "prompts": [
+        {
+          "id": "explore-overview",
+          "title": "Quick overview of the current sheet",
+          "description": "Get the structure (columns, types) plus the first rows in one shot.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "summary"],
+          "prompt": "Give me a quick overview of this sheet: total rows, all columns with their types, and the first 5 rows of data. End with anything that looks unusual (empty columns, mixed types, suspicious values)."
+        },
+        {
+          "id": "explore-find-empty",
+          "title": "Find empty or incomplete rows",
+          "description": "Surface rows where critical columns are blank.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "quality"],
+          "prompt": "Scan the first 200 rows of this sheet and list those where the column <Status> is empty. For each, give me the row number and the value of the <Task> column."
+        },
+        {
+          "id": "explore-duplicates",
+          "title": "Detect duplicate values",
+          "description": "Spot rows that share the same value in a key column.",
+          "difficulty": "medium",
+          "risk": "safe",
+          "tags": ["read-only", "quality"],
+          "prompt": "Look at the column <Order Number>. List every value that appears in more than one row, and for each duplicate show me the row numbers concerned. Don't change anything."
+        },
+        {
+          "id": "explore-summary-by-group",
+          "title": "Summary by group",
+          "description": "Aggregate counts (or sums) by a category column.",
+          "difficulty": "medium",
+          "risk": "safe",
+          "tags": ["read-only", "analytics"],
+          "prompt": "Group the rows by the column <Status> and tell me, for each value: how many rows it has, and the sum of the column <Quantity>. Format the answer as a Markdown table."
+        }
+      ]
+    },
+    {
+      "id": "rows",
+      "title": "Rows — data manipulation",
+      "icon": "rows",
+      "description": "Add, update, move, and delete rows. The agent will ask for confirmation before each write.",
+      "prompts": [
+        {
+          "id": "rows-add-one",
+          "title": "Add one row",
+          "description": "Insert a single row with explicit values.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write"],
+          "prompt": "Add one row to this sheet with: <Task>='Prepare report', <Status>='Not started', <Due Date>='2026-05-15'. Show me the payload before sending it."
+        },
+        {
+          "id": "rows-add-many",
+          "title": "Add several rows at once",
+          "description": "Bulk insert from a list you paste.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["write", "batch"],
+          "prompt": "Add the following rows to this sheet. Use the columns <Task> and <Owner>:\n1. Audit Q2 budget — Alice\n2. Refresh dashboards — Bob\n3. Plan kickoff — Carol\n\nConfirm the planned payload before writing."
+        },
+        {
+          "id": "rows-update-by-criteria",
+          "title": "Update rows matching a condition",
+          "description": "Change a value only on rows that match a filter.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["write", "conditional"],
+          "prompt": "For every row where the column <Status> = 'In progress' AND the column <Owner> is empty, set <Owner> = 'Unassigned'. List the affected row numbers BEFORE applying, then ask me to confirm."
+        },
+        {
+          "id": "rows-delete-with-preview",
+          "title": "Delete rows (with dry-run preview)",
+          "description": "Always preview which rows will be deleted before pulling the trigger.",
+          "difficulty": "medium",
+          "risk": "destructive",
+          "tags": ["delete", "preview"],
+          "prompt": "I want to delete every row where the column <Status> = 'Cancelled'. Don't delete anything yet — just list the row numbers, the values of <Task> and <Owner>, and the total count. I'll confirm explicitly."
+        }
+      ]
+    },
+    {
+      "id": "columns",
+      "title": "Columns & structure",
+      "icon": "columns",
+      "description": "Add, rename, retype, or remove columns. Be careful: changing a column type can lose data.",
+      "prompts": [
+        {
+          "id": "columns-add-text",
+          "title": "Add a TEXT_NUMBER column",
+          "description": "Most common case: a free-text/number column at a chosen position.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "structure"],
+          "prompt": "Add a new column to this sheet titled 'Notes', type TEXT_NUMBER, placed at the very end. Don't add any rows."
+        },
+        {
+          "id": "columns-add-picklist",
+          "title": "Add a PICKLIST (dropdown) column",
+          "description": "Restrict cell values to a fixed list of options.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "structure"],
+          "prompt": "Add a new PICKLIST column titled 'Priority' with the options: Low, Medium, High, Critical. Place it right after the <Status> column. Do not enable multi-select."
+        },
+        {
+          "id": "columns-add-checkbox",
+          "title": "Add a CHECKBOX column",
+          "description": "Boolean flag column.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "structure"],
+          "prompt": "Add a CHECKBOX column titled 'Validated' at the end of the sheet."
+        },
+        {
+          "id": "columns-rename",
+          "title": "Rename a column",
+          "description": "Pure metadata change, doesn't touch the data.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "structure"],
+          "prompt": "Rename the column currently called '<old name>' to '<new name>'. Don't change its type or position."
+        }
+      ]
+    },
+    {
+      "id": "crosssheet",
+      "title": "Cross-sheet — pull data from another sheet",
+      "icon": "link",
+      "description": "Bring values from a source sheet into the current one. The agent must create cross-sheet refs first, then write the formula.",
+      "prompts": [
+        {
+          "id": "crosssheet-vlookup",
+          "title": "VLOOKUP from another sheet",
+          "description": "Look up a value in a source sheet based on a key column.",
+          "difficulty": "advanced",
+          "risk": "caution",
+          "tags": ["cross-sheet", "formula", "vlookup"],
+          "prompt": "I want to bring the value of the column <Customer Name> from the sheet '<source sheet name>' (id=<source_sheet_id>) into this sheet, joined on the column <Order Number>. Walk me through:\n1. Read the source sheet schema and confirm the column ids.\n2. Create the cross-sheet references you need.\n3. Build the VLOOKUP formula.\n4. Apply it on rows 1–<N> of column <Customer Name>.\n\nAsk before each write."
+        },
+        {
+          "id": "crosssheet-bulk-transfer",
+          "title": "One-shot transfer of values (no live link)",
+          "description": "Copy values from a source sheet into the current sheet, in order. No formula, just static values.",
+          "difficulty": "advanced",
+          "risk": "caution",
+          "tags": ["cross-sheet", "transfer"],
+          "prompt": "Source sheet id: <source_sheet_id>. Source column: '<source column>'. Target column in THIS sheet: '<target column>'. I want a one-shot transfer (static values, no formula), preserving the row order from the source.\n\nMandatory steps:\n1. Confirm the exact source column name via get_sheet_summary.\n2. Tell me how many non-empty rows the source has and how many rows the target has. Propose adding rows if the target is shorter.\n3. Build the full mapping (target row → value to write) and show it as a Markdown table (cap display at 20 rows, mention the total).\n4. WAIT for my explicit confirmation before any update_rows."
+        },
+        {
+          "id": "crosssheet-aggregate",
+          "title": "Aggregate from another sheet (SUMIFS / COUNTIFS)",
+          "description": "Conditional sum or count using a cross-sheet range.",
+          "difficulty": "advanced",
+          "risk": "caution",
+          "tags": ["cross-sheet", "formula", "aggregate"],
+          "prompt": "In this sheet, in the column <Total Amount>, write a formula that sums the column <Amount> from the sheet '<source sheet>' (id=<source_sheet_id>) for every row whose <Status> equals the value of <Status> in this row. Create the cross-sheet refs first."
+        }
+      ]
+    },
+    {
+      "id": "formulas",
+      "title": "Formulas (single-sheet)",
+      "icon": "sigma",
+      "description": "Smartsheet-native formulas. Reminder: AVG (not AVERAGE), no AVERAGEIFS — use SUMIFS/COUNTIFS or AVG(COLLECT(...)).",
+      "prompts": [
+        {
+          "id": "formulas-sumif",
+          "title": "Sum if a condition matches",
+          "description": "Classic SUMIF on the same sheet.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["formula"],
+          "prompt": "In the cell <column=Total>, <row=last>, write a formula that sums the column <Amount> only for rows where <Status> = 'Paid'. Use SUMIF."
+        },
+        {
+          "id": "formulas-countifs",
+          "title": "Count with multiple criteria",
+          "description": "COUNTIFS to count rows that satisfy several conditions at once.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["formula"],
+          "prompt": "Add a new TEXT_NUMBER column titled 'High-prio open' and fill its first cell with a COUNTIFS formula counting rows where <Priority> = 'High' AND <Status> <> 'Done'."
+        },
+        {
+          "id": "formulas-if-nested",
+          "title": "Nested IF (status to label)",
+          "description": "Translate a value to a human-readable label.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["formula"],
+          "prompt": "In the column <Health>, write a formula that returns:\n- 'On track' if <Status> = 'In progress' AND <Due Date> >= TODAY()\n- 'At risk' if <Status> = 'In progress' AND <Due Date> < TODAY()\n- 'Done' if <Status> = 'Done'\n- empty otherwise.\nApply it to every row that already has data."
+        },
+        {
+          "id": "formulas-date-age",
+          "title": "Age in days from today",
+          "description": "Compute how many days have passed since a date.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["formula", "date"],
+          "prompt": "In the column <Age (days)>, write a formula that returns TODAY() - <Created Date> (rounded to an integer). Skip rows where <Created Date> is empty."
+        }
+      ]
+    },
+    {
+      "id": "sharing",
+      "title": "Sharing & permissions",
+      "icon": "users",
+      "description": "Invite or remove collaborators. Always confirm with me before changing permissions.",
+      "prompts": [
+        {
+          "id": "sharing-list",
+          "title": "List who has access",
+          "description": "Read-only audit of current shares.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "audit"],
+          "prompt": "List every user and group currently shared on this sheet, with their access level (VIEWER, EDITOR, ADMIN, OWNER). Format as a Markdown table."
+        },
+        {
+          "id": "sharing-invite",
+          "title": "Invite a user",
+          "description": "Add one or several users at a chosen level.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "permissions"],
+          "prompt": "Share this sheet with <user@example.com> as EDITOR. Don't send the notification email. Confirm the action before applying."
+        },
+        {
+          "id": "sharing-revoke",
+          "title": "Revoke a user's access",
+          "description": "Remove a collaborator from the sheet.",
+          "difficulty": "easy",
+          "risk": "destructive",
+          "tags": ["write", "permissions"],
+          "prompt": "Remove <user@example.com> from this sheet's shares. List the current access level first so I can confirm we're removing the right person."
+        }
+      ]
+    },
+    {
+      "id": "automations",
+      "title": "Automations & alerts",
+      "icon": "bolt",
+      "description": "Inspect, pause, or remove automation rules attached to the sheet.",
+      "prompts": [
+        {
+          "id": "automations-list",
+          "title": "List all automation rules",
+          "description": "Audit what automations exist on the sheet.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "audit"],
+          "prompt": "List every automation rule on this sheet. For each, give me: name, trigger type (event-based / time-based), action type (notification / update / move / approval), and whether it is enabled. Format as a Markdown table."
+        },
+        {
+          "id": "automations-disable",
+          "title": "Disable an automation",
+          "description": "Pause a rule without deleting it.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write"],
+          "prompt": "Disable the automation rule named '<rule name>' on this sheet. Confirm what it does before disabling, and tell me how to re-enable it later."
+        },
+        {
+          "id": "automations-delete",
+          "title": "Delete an automation",
+          "description": "Permanently remove a rule.",
+          "difficulty": "medium",
+          "risk": "destructive",
+          "tags": ["delete"],
+          "prompt": "Delete the automation rule named '<rule name>'. Show me its full configuration first, then ask for explicit confirmation."
+        }
+      ]
+    },
+    {
+      "id": "maintenance",
+      "title": "Maintenance & quality",
+      "icon": "wrench",
+      "description": "Clean up, normalise, and fix data quality issues.",
+      "prompts": [
+        {
+          "id": "maintenance-trim",
+          "title": "Trim leading/trailing whitespace",
+          "description": "Clean text columns that have extra spaces.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["write", "clean"],
+          "prompt": "In the column <Customer Name>, find every cell whose value differs from its trimmed version (leading or trailing whitespace). List the affected row numbers. After my confirmation, update each cell to the trimmed value."
+        },
+        {
+          "id": "maintenance-normalise-status",
+          "title": "Normalise status values",
+          "description": "Map free-text status to a canonical list.",
+          "difficulty": "advanced",
+          "risk": "caution",
+          "tags": ["write", "clean"],
+          "prompt": "List every distinct value of the column <Status> with its row count. Then propose a mapping to this canonical list: ['Not started', 'In progress', 'Blocked', 'Done', 'Cancelled']. Apply the mapping ONLY after I confirm."
+        },
+        {
+          "id": "maintenance-archive",
+          "title": "Archive old rows to another sheet",
+          "description": "Move (not copy) rows older than X to an archive sheet.",
+          "difficulty": "advanced",
+          "risk": "destructive",
+          "tags": ["write", "delete", "cross-sheet"],
+          "prompt": "Move every row where <Done Date> is more than 180 days ago to the sheet '<archive sheet>' (id=<archive_sheet_id>), preserving column values. Then delete those rows from this sheet. Show me the count and the first 5 row numbers before doing anything."
+        }
+      ]
+    }
+  ]
+}

@@ -6,9 +6,10 @@ import time
 import traceback
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
@@ -1086,6 +1087,183 @@ async def smartsheet_webhook(payload: dict):
     return {"status": "received", "stored": saved}
 
 
+# ───────────────────────── Bug reports ─────────────────────────
+#
+# Lightweight in-app bug box: every user can send a report with a
+# free-text description plus an optional auto-collected client
+# context bundle (last messages, agent metrics, browser, …). Reports
+# are persisted in SQLite (table bug_reports) AND mirrored to a
+# JSONL append-only file under data/ so they survive even if the DB
+# gets re-initialised. The admin GET endpoint is gated by the
+# BUG_REPORTS_ADMIN_TOKEN env var (no env → endpoint disabled).
+
+BUG_REPORTS_JSONL = Path(os.getenv(
+    "BUG_REPORTS_JSONL_PATH", "data/bug_reports.jsonl"
+))
+_BUG_DESC_MAX = 8000
+_BUG_STEPS_MAX = 4000
+_BUG_CTX_MAX = 64000  # serialised JSON length budget
+
+
+def _admin_token_ok(provided: str | None) -> bool:
+    expected = os.getenv("BUG_REPORTS_ADMIN_TOKEN", "")
+    if not expected:
+        return False  # endpoint disabled
+    if not provided:
+        return False
+    return secrets.compare_digest(expected, provided)
+
+
+def _append_bug_jsonl(record: dict) -> None:
+    """Append a single record to the bug-report JSONL mirror.
+
+    Best-effort — failure to write must NEVER break the API response.
+    """
+    try:
+        BUG_REPORTS_JSONL.parent.mkdir(parents=True, exist_ok=True)
+        with BUG_REPORTS_JSONL.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, default=str, ensure_ascii=False) + "\n")
+    except Exception as e:
+        log.warning(f"bug-report jsonl mirror failed: {e}")
+
+
+class BugReportRequest(BaseModel):
+    description: str
+    session_id: str | None = None
+    steps: str | None = None
+    severity: str | None = "normal"   # low / normal / high / blocker
+    reporter_email: str | None = None
+    reporter_name: str | None = None
+    context: dict | None = None       # client-collected bundle
+
+
+@app.post("/api/bug-reports")
+async def submit_bug_report(req: BugReportRequest, request: Request):
+    """Public endpoint — anyone using the app can file a bug.
+
+    We do NOT require a session: a bug can occur at the login screen.
+    If `session_id` is provided we attach the user_id and sheet_id
+    server-side so the report is fully contextualised.
+    """
+    desc = (req.description or "").strip()
+    if not desc:
+        return JSONResponse(
+            {"error": "description is required"}, status_code=400,
+        )
+    if len(desc) > _BUG_DESC_MAX:
+        desc = desc[:_BUG_DESC_MAX]
+    steps = (req.steps or "").strip()[:_BUG_STEPS_MAX] or None
+    severity = (req.severity or "normal").strip().lower()
+    reporter_email = (req.reporter_email or "").strip()[:320] or None
+    reporter_name = (req.reporter_name or "").strip()[:120] or None
+
+    user_id: int | None = None
+    sheet_id: str | None = None
+    if req.session_id:
+        session = sessions.get(req.session_id)
+        if session:
+            _touch(req.session_id)
+            user_id = session.get("db_user_id")
+            sheet_id = str(session.get("sheet_id") or "") or None
+
+    # Enrich the context with server-side facts the client cannot fake.
+    ctx = dict(req.context or {})
+    ctx.setdefault("server_time", time.time())
+    ctx.setdefault("client_ip", request.client.host if request.client else None)
+    ua = request.headers.get("user-agent")
+    if ua:
+        ctx.setdefault("user_agent", ua)
+    # Attach a lightweight snapshot of agent metrics if we have a session.
+    if req.session_id:
+        sess = sessions.get(req.session_id) or {}
+        agent = sess.get("agent")
+        if agent is not None and hasattr(agent, "metrics"):
+            ctx.setdefault("agent_metrics_snapshot", dict(agent.metrics))
+        llm = sess.get("llm")
+        if llm is not None:
+            ctx.setdefault("llm_provider", getattr(llm, "provider", None))
+            ctx.setdefault("llm_model", getattr(llm, "model", None))
+
+    # Cap serialised context size.
+    try:
+        ctx_serialised = json.dumps(ctx, default=str)
+    except (TypeError, ValueError):
+        ctx_serialised = "{}"
+    if len(ctx_serialised) > _BUG_CTX_MAX:
+        ctx = {"_truncated": True, "_original_size": len(ctx_serialised)}
+
+    report_id = await ssdb.create_bug_report(
+        user_id=user_id,
+        session_id=req.session_id,
+        sheet_id=sheet_id,
+        reporter_email=reporter_email,
+        reporter_name=reporter_name,
+        description=desc,
+        steps=steps,
+        severity=severity,
+        context=ctx,
+    )
+
+    _append_bug_jsonl({
+        "id": report_id,
+        "created_at": time.time(),
+        "user_id": user_id,
+        "session_id": req.session_id,
+        "sheet_id": sheet_id,
+        "reporter_email": reporter_email,
+        "reporter_name": reporter_name,
+        "severity": severity,
+        "description": desc,
+        "steps": steps,
+        "context": ctx,
+    })
+
+    log.info(
+        f"bug-report #{report_id} filed "
+        f"(severity={severity} sheet={sheet_id} user={user_id})"
+    )
+    return {"status": "ok", "id": report_id}
+
+
+@app.get("/api/bug-reports")
+async def list_bug_reports(
+    request: Request,
+    status: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+):
+    """Admin endpoint. Disabled unless BUG_REPORTS_ADMIN_TOKEN is set
+    in the environment AND the request carries a matching
+    `X-Admin-Token` header."""
+    if not _admin_token_ok(request.headers.get("X-Admin-Token")):
+        return JSONResponse(
+            {"error": "forbidden"}, status_code=403,
+        )
+    limit = max(1, min(int(limit or 100), 500))
+    offset = max(0, int(offset or 0))
+    items = await ssdb.list_bug_reports(status=status, limit=limit, offset=offset)
+    total = await ssdb.count_bug_reports(status=status)
+    return {"total": total, "limit": limit, "offset": offset, "items": items}
+
+
+class BugReportStatusUpdate(BaseModel):
+    status: str   # open / triaged / fixed / wontfix
+
+
+@app.post("/api/bug-reports/{report_id}/status")
+async def update_bug_report_status_route(
+    report_id: int, req: BugReportStatusUpdate, request: Request,
+):
+    if not _admin_token_ok(request.headers.get("X-Admin-Token")):
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+    ok = await ssdb.update_bug_report_status(report_id, req.status)
+    if not ok:
+        return JSONResponse(
+            {"error": "not_found_or_invalid_status"}, status_code=404,
+        )
+    return {"status": "ok"}
+
+
 class GenerateTitleRequest(BaseModel):
     session_id: str
     snippet: str
@@ -1391,3 +1569,56 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 @app.get("/")
 async def index():
     return FileResponse("frontend/index.html")
+
+
+# ───────────────────────── Prompts library ─────────────────────────
+#
+# A curated catalogue of copy-paste prompts shipped with the app so
+# operators don't have to re-invent canonical phrasings every time.
+# The catalogue lives in `frontend/data/prompts.json` (one source of
+# truth, easy to edit without rebuilding) and is exposed both as raw
+# JSON via `/api/prompts` (consumed by the in-app modal and the
+# dedicated `/help` page) and indirectly via `/static/data/prompts.json`.
+# We deliberately read the file on every request: the catalogue is
+# small (~30 entries / a few KB) and operators may edit it live in
+# production without restarting uvicorn.
+
+PROMPTS_PATH = Path(os.getenv(
+    "SMARTSHEET_PROMPTS_PATH", "frontend/data/prompts.json"
+))
+
+
+@app.get("/api/prompts")
+async def get_prompts_catalogue():
+    """Return the full prompt catalogue used by the Help modal/page.
+
+    The endpoint is public on purpose — it's static documentation,
+    not user data — and re-reads the JSON file on every request so
+    edits to `frontend/data/prompts.json` go live without restart.
+    """
+    try:
+        with PROMPTS_PATH.open("r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except FileNotFoundError:
+        return JSONResponse(
+            {"error": "prompts catalogue not found", "path": str(PROMPTS_PATH)},
+            status_code=404,
+        )
+    except json.JSONDecodeError as exc:
+        return JSONResponse(
+            {"error": "prompts catalogue is not valid JSON", "detail": str(exc)},
+            status_code=500,
+        )
+
+    if not isinstance(data, dict) or "categories" not in data:
+        return JSONResponse(
+            {"error": "prompts catalogue malformed: missing 'categories' key"},
+            status_code=500,
+        )
+    return data
+
+
+@app.get("/help")
+async def help_page():
+    """Serve the dedicated full-page prompt library."""
+    return FileResponse("frontend/help.html")
