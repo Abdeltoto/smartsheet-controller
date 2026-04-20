@@ -114,14 +114,50 @@ These functions are **confirmed working** by our test suite — use them as-is. 
 - **Column formulas**: one formula applied to every row of the column simultaneously (set via UI or `update_column`).
 - **Summary fields**: sheet-level KPIs, e.g. `=COUNTIFS([Status]:[Status], "Done")`.
 
-## CROSS-SHEET FORMULAS
+## CROSS-SHEET FORMULAS (pulling data from ANOTHER sheet)
 
-Refs use `{{Name}}` syntax -- must be created first.
+Refs use `{{Name}}` syntax (single braces in the actual formula). **They MUST be
+created with `create_cross_sheet_ref` before any formula uses them** -- writing
+`=INDEX(COLLECT({{Foo}}, ...))` without first creating `Foo` produces
+`#INVALID REF`.
+
+### Mandatory workflow when the user asks to pull / lookup / bring back data from another sheet
+
+1. **Identify the SOURCE sheet.** If you don't already have its ID, call
+   `list_sheets` (or `search`) to find it from the user's hint (name, fragment).
+2. **Read the source schema** with `get_sheet_summary(sheet_id=<source_id>)` to
+   obtain the numeric `id` of every source column you need (the key column and
+   the value column at minimum).
+3. **Create one cross-sheet ref per column you need** by calling
+   `create_cross_sheet_ref(sheet_id=<CURRENT sheet>, name="...", source_sheet_id=<source_id>, start_column_id=<id>, end_column_id=<id>)`.
+   For a single column, `start_column_id == end_column_id`. For VLOOKUP-style
+   formulas that need a multi-column range, set `start_column_id` to the first
+   column and `end_column_id` to the last column on the source sheet.
+4. **Write the formula** via `add_rows` / `update_rows` (per-cell formula) or
+   `add_column` / `update_column` (column-wide formula) using `{{RefName}}`.
+
+### Canonical patterns
+
 - **Lookup**: `=INDEX(COLLECT({{Values}},{{Keys}},[Key]@row),1)` -- THE standard pattern.
 - **Multi-criteria**: `=INDEX(COLLECT({{Values}},{{K1}},[K1]@row,{{K2}},[K2]@row),1)`
-- **Aggregation**: `=SUMIFS({{Amounts}},{{Cat}},[Cat]@row)`
-- **Existence**: `=IF(COUNTIFS({{IDs}},[ID]@row)>0,"Found","Missing")`
-- Cell linking: one-way auto-maintained data flow, different from formulas.
+- **VLOOKUP** (needs multi-col range ref): `=VLOOKUP([Key]@row, {{AllCols}}, 3, false)`
+- **Aggregation**: `=SUMIFS({{Amounts}},{{Cat}},[Cat]@row)` -- works with any condition.
+- **Conditional MAX / MIN** (no MAXIFS / MINIFS in Smartsheet):
+  `=MAX(COLLECT({{Values}},{{Cat}},"X"))` / `=MIN(COLLECT({{Values}},{{Cat}},"X"))`.
+- **Conditional AVG** (no AVERAGEIFS): `=SUMIFS({{V}},{{C}},"X") / COUNTIFS({{C}},"X")`.
+- **Existence**: `=IF(COUNTIFS({{IDs}},[ID]@row)>0,"Found","Missing")`.
+- **JOIN cross-sheet** (raw `JOIN` includes empty trailing cells, wrap with
+  `COLLECT` to drop them): `=JOIN(COLLECT({{Names}},{{Names}},<>""),"|")`.
+
+### Common pitfalls
+
+- `AVERAGE`, `COUNTA`, `AVERAGEIFS`, `MAXIFS`, `MINIFS`, `STDEV` (cross-sheet)
+  are NOT supported by the Smartsheet engine -- use the alternatives above.
+- `create_cross_sheet_ref` may return 404 right after a sheet was just created
+  (eventual consistency). Wait a couple of seconds and retry.
+- Cell linking (`create_cell_link`) is a different feature: one-way live link
+  on a single cell, not usable inside formulas. Do NOT confuse it with cross-
+  sheet refs.
 
 ## PLATFORM FEATURES
 
@@ -200,12 +236,16 @@ def _fmt_sample(rows: list[dict]) -> str:
 
 
 def _fmt_sheets(all_sheets: list[dict], current_id: str) -> str:
+    """Format the list of *other* sheets the user owns. We include the numeric
+    sheet ID for each one so cross-sheet workflows can pick a `source_sheet_id`
+    directly without an extra `list_sheets` call when the right name is
+    obvious from the user's hint."""
     others = [s for s in all_sheets if str(s.get("id")) != str(current_id)]
     if not others:
         return "none"
-    names = [s["name"] for s in others[:10]]
+    parts = [f"{s['name']} (id={s['id']})" for s in others[:10] if s.get("id") is not None]
     more = f" +{len(others)-10}" if len(others) > 10 else ""
-    return ", ".join(names) + more
+    return ", ".join(parts) + more
 
 
 def _new_metrics() -> dict[str, int]:

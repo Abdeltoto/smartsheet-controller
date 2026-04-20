@@ -92,11 +92,32 @@ TOOL_DEFINITIONS = [
        {"sheet_id": _S, "destination_id": {"type": "string"}, "destination_type": {"type": "string"}},
        ["sheet_id", "destination_id"]),
 
-    _t("list_cross_sheet_refs", "List cross-sheet references.",
+    _t("list_cross_sheet_refs",
+       "List existing cross-sheet references on this sheet (named ranges that "
+       "formulas can use via {RefName}). Call this BEFORE create_cross_sheet_ref "
+       "to avoid duplicates and to discover already-available refs.",
        {"sheet_id": _S}, ["sheet_id"]),
-    _t("create_cross_sheet_ref", "Create cross-sheet ref for formulas.",
-       {"sheet_id": _S, "name": {"type": "string"}, "source_sheet_id": {"type": "integer"},
-        "start_column_id": {"type": "integer"}, "end_column_id": {"type": "integer"}},
+    _t("create_cross_sheet_ref",
+       "MANDATORY FIRST STEP for any formula that pulls data from ANOTHER sheet "
+       "(VLOOKUP, INDEX/MATCH, INDEX(COLLECT(...)), SUMIFS / COUNTIFS / "
+       "AVERAGEIF, etc.). Creates a named range on `sheet_id` (the sheet where "
+       "the formula will live) that points to one or more columns of "
+       "`source_sheet_id` (the sheet you want to read from). The formula will "
+       "then reference it as `{name}` (single braces). REQUIRED workflow: "
+       "(1) get the source sheet ID via list_sheets / search; "
+       "(2) call get_sheet_summary on the source to obtain column IDs; "
+       "(3) call create_cross_sheet_ref ONCE per column you need (single column "
+       "→ start_column_id == end_column_id; whole row range needed by VLOOKUP "
+       "→ start = first col id, end = last col id); "
+       "(4) write the formula via add_rows / update_rows / add_column with "
+       "`=INDEX(COLLECT({name}, ...))` or `=SUMIFS({name}, ...)`. NEVER write a "
+       "formula that uses `{xyz}` without having created `xyz` first — that "
+       "produces #INVALID REF.",
+       {"sheet_id": _S,
+        "name": {"type": "string"},
+        "source_sheet_id": {"type": "integer"},
+        "start_column_id": {"type": "integer"},
+        "end_column_id": {"type": "integer"}},
        ["sheet_id", "name", "source_sheet_id", "start_column_id", "end_column_id"]),
     _t("list_automations", "List automation rules.",
        {"sheet_id": _S}, ["sheet_id"]),
@@ -317,7 +338,24 @@ _INTENT_KEYWORDS = {
         "delete sheet", "supprime feuille", "supprimer feuille",
         "copy sheet", "duplique feuille", "move sheet",
         "create folder", "nouveau dossier", "créer un dossier",
-        "cross-sheet", "cross sheet", "référence", "reference",
+        # Cross-sheet formulas / lookups across sheets — these phrases unlock
+        # `create_cross_sheet_ref` so the agent can actually build the named
+        # reference required by every cross-sheet formula.
+        "cross-sheet", "cross sheet", "crosssheet", "crosssheets",
+        "référence", "reference", "named range", "ref to ", "named ref",
+        "lookup", "vlookup", "hlookup", "xlookup", "index match",
+        "ramen", "ramène", "ramener", "ramenes", "ramènes", "ramenez",
+        "récup", "récupère", "récupérer", "récupères", "récupérez",
+        "recup", "recupere", "recuperer", "recuperez",
+        "import", "importe", "importer", "importez",
+        "tire", "tirer", "tires", "tirez", "tirée", "tirées",
+        "pull from", "pull data", "pull value", "pull values",
+        "another sheet", "other sheet", "from another", "from other",
+        "autre sheet", "autre feuille", "autres feuilles",
+        "across sheet", "across sheets", "entre feuille", "entre feuilles",
+        "between sheet", "between sheets", "inter-sheet", "inter sheet",
+        "join sheet", "rejoindre la feuille", "rejoindre une feuille",
+        "external sheet",
     ],
     "share": [
         "share", "partage", "permission", "access", "accès", "invite",
@@ -384,6 +422,15 @@ _WRITE_VERB_TOKENS = {
     "passe", "passer", "passez",
     "transforme", "transformer", "transformez",
     "remplace", "remplacer", "remplacez",
+    # Cross-sheet "pull data from another sheet" verbs (unlock write_structure
+    # so create_cross_sheet_ref enters the toolset).
+    "ramen", "ramène", "ramener", "ramenes", "ramènes",
+    "récup", "récupère", "récupérer", "récupères",
+    "recup", "recupere", "recuperer",
+    "import", "importe", "importer", "importes", "importez",
+    "tire", "tirer", "tires", "tirez",
+    "pull", "pulls", "lookup", "vlookup", "hlookup", "xlookup",
+    "fetch", "fetches", "bring", "brings", "join", "joins",
 }
 
 _WORD_TOKEN_RE = re.compile(r"[a-zàâäéèêëïîôöùûüç]+", re.IGNORECASE)

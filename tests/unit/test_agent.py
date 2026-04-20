@@ -62,6 +62,14 @@ class TestFormatters:
         assert "Other" in out
         assert "Main" not in out
 
+    def test_fmt_sheets_includes_id_for_cross_sheet_workflow(self):
+        # The agent needs the numeric sheet ID to call create_cross_sheet_ref
+        # without an extra round-trip through list_sheets.
+        sheets = [{"id": 1, "name": "Main"}, {"id": 42, "name": "Other"}]
+        out = _fmt_sheets(sheets, "1")
+        assert "42" in out, "other-sheet ID must be visible to the LLM"
+        assert "Other" in out
+
     def test_fmt_sheets_overflow_marker(self):
         sheets = [{"id": i, "name": f"S{i}"} for i in range(20)]
         out = _fmt_sheets(sheets, "999")

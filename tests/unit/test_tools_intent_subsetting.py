@@ -247,3 +247,72 @@ class TestEmptyAndEdgeCases:
         names = _names(result)
         assert "delete_sheet" not in names
         assert "delete_rows" not in names
+
+
+class TestCrossSheetIntents:
+    """Pulling data from another sheet REQUIRES `create_cross_sheet_ref`. The
+    verb-keyword filter previously masked this tool because none of the
+    natural phrasings ('ramène', 'récupère', 'lookup', 'from another sheet')
+    were registered. These tests pin the contract so the regression cannot
+    come back silently: any common cross-sheet phrasing must surface BOTH
+    `create_cross_sheet_ref` and `list_cross_sheet_refs`, plus the
+    discoverability tools (`list_sheets`, `get_sheet_summary`) needed to
+    follow the workflow.
+    """
+
+    @pytest.mark.parametrize("msg", [
+        # FR
+        "ramène la valeur Status de la sheet Customers",
+        "récupère le prix depuis l'autre feuille",
+        "Importe la colonne Status depuis ma sheet Source",
+        "fais un lookup sur l'autre sheet",
+        "vlookup le SKU dans la feuille Catalogue",
+        "j'ai besoin de tirer les valeurs d'une autre sheet",
+        "rejoindre la feuille Source pour récupérer le prix",
+        "référence vers une autre feuille",
+        "crée une cross-sheet reference",
+        # EN
+        "pull the price from another sheet",
+        "I want to lookup values from another sheet",
+        "VLOOKUP the SKU from the Catalogue sheet",
+        "create a cross-sheet reference to Customers",
+        "bring data from the other sheet into this one",
+        "join the Source sheet to fetch the status",
+        "I need an INDEX MATCH across sheets",
+    ])
+    def test_cross_sheet_phrasings_unlock_create_cross_sheet_ref(self, msg: str):
+        names = _names(select_tools_for_message(msg))
+        assert "create_cross_sheet_ref" in names, (
+            f"'{msg}' must expose `create_cross_sheet_ref` to the LLM — "
+            f"otherwise the agent literally cannot build the reference"
+        )
+
+    @pytest.mark.parametrize("msg", [
+        "ramène la valeur Status de la sheet Customers",
+        "lookup the price from the Catalogue sheet",
+        "récupère le prix depuis l'autre feuille",
+    ])
+    def test_cross_sheet_phrasings_also_expose_list_cross_sheet_refs(self, msg: str):
+        # `list_cross_sheet_refs` lets the agent discover already-existing
+        # named refs and avoid duplicates.
+        names = _names(select_tools_for_message(msg))
+        assert "list_cross_sheet_refs" in names
+
+    @pytest.mark.parametrize("msg", [
+        "ramène la valeur Status de la sheet Customers",
+        "lookup the price from the Catalogue sheet",
+        "I want to pull the status from another sheet",
+    ])
+    def test_cross_sheet_workflow_also_exposes_discovery_and_writers(self, msg: str):
+        # The full cross-sheet workflow is: list_sheets / search → get summary
+        # → create_cross_sheet_ref → write the formula via add_rows /
+        # update_rows / add_column. All these tools must be in the subset for
+        # the agent to actually finish the job in a single turn.
+        names = _names(select_tools_for_message(msg))
+        assert "list_sheets" in names, "needed to find the source sheet ID"
+        assert "get_sheet_summary" in names, "needed to obtain source column IDs"
+        # add_column is the column-formula path (most common for cross-sheet
+        # lookups that should apply to every row); add_rows / update_rows are
+        # the per-cell paths.
+        assert "add_column" in names
+        assert "add_rows" in names
