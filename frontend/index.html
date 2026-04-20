@@ -936,6 +936,32 @@
   .suggestion-chip:active { transform: translateY(0); }
 
   /* ─── Try Cards (rich empty state) ─── */
+  .agent-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 6px 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid;
+    font-size: 13px;
+    line-height: 1.45;
+    max-width: 720px;
+    align-self: flex-start;
+    animation: fadeInUp 0.25s ease-out;
+  }
+  .agent-hint-info { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.35); color: var(--text-primary); }
+  .agent-hint-warn { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.45); color: var(--text-primary); }
+  .agent-hint-error { background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.45); color: var(--text-primary); }
+  .agent-hint-icon { font-size: 16px; line-height: 1.2; flex-shrink: 0; opacity: 0.85; }
+  .agent-hint-body { display: flex; flex-direction: column; gap: 2px; }
+  .agent-hint-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; letter-spacing: 0.04em;
+    text-transform: uppercase; opacity: 0.7;
+  }
+  .agent-hint-msg { color: var(--text-primary); }
+
   .try-cards-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2461,6 +2487,77 @@
   .sheet-option.selected { background: rgba(59,130,246,0.15); color: var(--text); font-weight: 600; }
   .sheet-option.empty { color: var(--text-muted); text-align: center; cursor: default; font-style: italic; }
 
+  .sheet-tabs {
+    display: flex; gap: 6px; margin-bottom: 10px;
+  }
+  .sheet-tab {
+    flex: 1; background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    padding: 8px 10px; border-radius: var(--radius);
+    cursor: pointer; font-size: 12px; font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: all 0.15s;
+  }
+  .sheet-tab:hover { color: var(--text); border-color: rgba(59,130,246,0.4); }
+  .sheet-tab.active {
+    background: rgba(59,130,246,0.12);
+    border-color: var(--accent);
+    color: var(--accent-light);
+  }
+  .sheet-tab-panel { display: block; }
+  .sheet-action-btn {
+    width: 100%; margin-top: 4px;
+    padding: 11px 16px; font-size: 13px;
+  }
+  .sheet-action-btn:disabled {
+    opacity: 0.5; cursor: not-allowed;
+  }
+  .sheet-action-result { margin-top: 10px; }
+  .sheet-action-result:empty { display: none; }
+  .lookup-success {
+    display: flex; flex-direction: column; gap: 10px;
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: var(--success);
+    padding: 12px; border-radius: var(--radius);
+    font-size: 12px; line-height: 1.5;
+  }
+  .lookup-success strong { color: var(--text); }
+  .lookup-success-meta {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; color: var(--text-muted);
+  }
+  .lookup-success-meta a {
+    color: var(--accent-light); text-decoration: none;
+    border-bottom: 1px dotted rgba(88,166,255,0.4);
+  }
+  .lookup-success-meta a:hover { border-bottom-style: solid; }
+  .btn-talk-to-sheet {
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: white; border: none;
+    padding: 11px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.2px; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s, opacity 0.15s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+  }
+  .btn-talk-to-sheet:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16,185,129,0.35);
+  }
+  .btn-talk-to-sheet:active { transform: translateY(0); }
+  .btn-talk-to-sheet:disabled { opacity: 0.6; cursor: progress; }
+  .btn-talk-to-sheet .arrow { font-size: 16px; line-height: 1; }
+  .lookup-error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: var(--error);
+    padding: 10px 12px; border-radius: var(--radius);
+    font-size: 12px; line-height: 1.5;
+  }
+
   .collapsible-label { cursor: pointer; display: flex; align-items: center; gap: 8px; }
   .toggle-arrow { transition: transform 0.2s; display: inline-block; font-size: 14px; color: var(--text-muted); }
   .toggle-arrow.open { transform: rotate(90deg); }
@@ -3122,8 +3219,30 @@
                   <span class="field-meta" id="sheet-count-label"></span>
                 </label>
                 <div class="sheet-browser">
-                  <input type="text" id="sheet-filter" placeholder="Search your sheets..." oninput="filterSheets()" autocomplete="off">
-                  <div class="sheet-dropdown" id="sheet-dropdown"></div>
+                  <div class="sheet-tabs" role="tablist">
+                    <button type="button" class="sheet-tab active" data-tab="browse" onclick="switchSheetTab('browse')" role="tab">Browse</button>
+                    <button type="button" class="sheet-tab" data-tab="byid" onclick="switchSheetTab('byid')" role="tab">By ID</button>
+                    <button type="button" class="sheet-tab" data-tab="create" onclick="switchSheetTab('create')" role="tab">Create new</button>
+                  </div>
+
+                  <div class="sheet-tab-panel" data-tab="browse">
+                    <input type="text" id="sheet-filter" placeholder="Search your sheets by name..." oninput="filterSheets()" autocomplete="off">
+                    <div class="sheet-dropdown" id="sheet-dropdown"></div>
+                  </div>
+
+                  <div class="sheet-tab-panel" data-tab="byid" style="display:none;">
+                    <input type="text" id="sheet-byid-input" placeholder="Paste a sheet ID (e.g. 7340597274509188)" oninput="onByIdInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupSheetById();}" autocomplete="off">
+                    <button type="button" class="btn btn-secondary sheet-action-btn" id="sheet-byid-btn" onclick="lookupSheetById()" disabled>Find sheet</button>
+                    <div class="sheet-action-result" id="sheet-byid-result"></div>
+                  </div>
+
+                  <div class="sheet-tab-panel" data-tab="create" style="display:none;">
+                    <input type="text" id="sheet-create-name" placeholder="New sheet name (e.g. Q3 Sprint Tracker)" maxlength="50" oninput="onCreateInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();createBlankSheet();}" autocomplete="off">
+                    <div class="field-hint">A blank sheet with starter columns (Task, Status, Due Date, Notes) will be created. You can rename or restructure everything from chat afterwards.</div>
+                    <button type="button" class="btn btn-secondary sheet-action-btn" id="sheet-create-btn" onclick="createBlankSheet()" disabled>Create sheet</button>
+                    <div class="sheet-action-result" id="sheet-create-result"></div>
+                  </div>
+
                   <input type="hidden" id="ss-sheet-id">
                 </div>
               </div>
@@ -3786,6 +3905,144 @@ function pickSheet(el) {
   el.classList.add('selected');
   document.getElementById('ss-sheet-id').value = el.dataset.id;
   document.getElementById('sheet-filter').value = el.dataset.name;
+  // Wipe success messages from sibling tabs so the user sees a single source of truth
+  const byidOut = document.getElementById('sheet-byid-result');
+  const createOut = document.getElementById('sheet-create-result');
+  if (byidOut) byidOut.innerHTML = '';
+  if (createOut) createOut.innerHTML = '';
+}
+
+function switchSheetTab(name) {
+  document.querySelectorAll('.sheet-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.sheet-tab-panel').forEach(p => {
+    p.style.display = (p.dataset.tab === name) ? 'block' : 'none';
+  });
+  // Hide step2 error when switching modes — context changes
+  const errEl = document.getElementById('setup-error-step2');
+  if (errEl) errEl.style.display = 'none';
+}
+
+function onByIdInput() {
+  const el = document.getElementById('sheet-byid-input');
+  const raw = el.value || '';
+  // Strip whitespace and quotes silently — common when copy-pasting from "File > Properties"
+  const cleaned = raw.replace(/[\s"'`]/g, '');
+  if (cleaned !== raw) el.value = cleaned;
+  document.getElementById('sheet-byid-btn').disabled = !/^\d{6,}$/.test(cleaned);
+  // Wipe stale success/error block so the user knows the previous lookup is no longer valid
+  const out = document.getElementById('sheet-byid-result');
+  if (out && out.innerHTML) out.innerHTML = '';
+  document.getElementById('ss-sheet-id').value = '';
+}
+
+function onCreateInput() {
+  const v = (document.getElementById('sheet-create-name').value || '').trim();
+  document.getElementById('sheet-create-btn').disabled = v.length === 0;
+}
+
+async function lookupSheetById() {
+  const input = document.getElementById('sheet-byid-input');
+  const btn = document.getElementById('sheet-byid-btn');
+  const out = document.getElementById('sheet-byid-result');
+  const id = (input.value || '').trim();
+  out.innerHTML = '';
+  if (!/^\d+$/.test(id)) {
+    out.innerHTML = '<div class="lookup-error">Sheet ID must be numeric.</div>';
+    return;
+  }
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = 'Looking up...';
+  try {
+    const r = await fetch('/api/lookup-sheet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ smartsheet_token: validatedToken, sheet_id: id })
+    });
+    const data = await r.json();
+    if (!r.ok || data.error) {
+      out.innerHTML = '<div class="lookup-error">' + escapeHtml(data.error || 'Sheet not found.') + '</div>';
+      document.getElementById('ss-sheet-id').value = '';
+      return;
+    }
+    document.getElementById('ss-sheet-id').value = data.id;
+    const meta = (data.row_count != null && data.column_count != null)
+      ? data.row_count + ' rows &middot; ' + data.column_count + ' columns'
+      : '';
+    out.innerHTML =
+      '<div class="lookup-success">' +
+      '  <div>Found <strong>' + escapeHtml(data.name || ('Sheet ' + data.id)) + '</strong></div>' +
+      (meta ? '  <div class="lookup-success-meta">' + meta + '</div>' : '') +
+      '  <button type="button" class="btn-talk-to-sheet" onclick="talkToSelectedSheet(this)"><span>Talk to this sheet</span><span class="arrow">&rarr;</span></button>' +
+      '</div>';
+  } catch (e) {
+    out.innerHTML = '<div class="lookup-error">Network error: ' + escapeHtml(String(e && e.message || e)) + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+function talkToSelectedSheet(btn) {
+  // Visual feedback on the inline CTA — finalConnect() handles its own button state for the main one
+  if (btn) {
+    btn.disabled = true;
+    const label = btn.querySelector('span:first-child');
+    if (label) label.textContent = 'Connecting...';
+    const arrow = btn.querySelector('.arrow');
+    if (arrow) arrow.textContent = '...';
+  }
+  // Re-use the canonical connect flow (validates sheet ID + LLM + opens session)
+  finalConnect();
+}
+
+async function createBlankSheet() {
+  const input = document.getElementById('sheet-create-name');
+  const btn = document.getElementById('sheet-create-btn');
+  const out = document.getElementById('sheet-create-result');
+  const name = (input.value || '').trim();
+  out.innerHTML = '';
+  if (!name) {
+    out.innerHTML = '<div class="lookup-error">Please give the new sheet a name.</div>';
+    return;
+  }
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = 'Creating...';
+  try {
+    const r = await fetch('/api/create-sheet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ smartsheet_token: validatedToken, name: name })
+    });
+    const data = await r.json();
+    if (!r.ok || data.error) {
+      out.innerHTML = '<div class="lookup-error">' + escapeHtml(data.error || 'Could not create sheet.') + '</div>';
+      document.getElementById('ss-sheet-id').value = '';
+      return;
+    }
+    document.getElementById('ss-sheet-id').value = data.id;
+    const permaLink = data.permalink
+      ? ' &middot; <a href="' + escapeHtml(data.permalink) + '" target="_blank" rel="noopener">Open in Smartsheet &#8599;</a>'
+      : '';
+    out.innerHTML =
+      '<div class="lookup-success">' +
+      '  <div>Created <strong>' + escapeHtml(data.name) + '</strong></div>' +
+      '  <div class="lookup-success-meta">ID ' + escapeHtml(data.id) + permaLink + '</div>' +
+      '  <button type="button" class="btn-talk-to-sheet" onclick="talkToSelectedSheet(this)"><span>Talk to this sheet</span><span class="arrow">&rarr;</span></button>' +
+      '</div>';
+    // Add to validatedSheets so it shows up in the Browse tab too
+    if (typeof validatedSheets !== 'undefined' && Array.isArray(validatedSheets)) {
+      validatedSheets.unshift({ id: data.id, name: data.name });
+      const countLabel = document.getElementById('sheet-count-label');
+      if (countLabel) countLabel.textContent = validatedSheets.length + ' sheet' + (validatedSheets.length === 1 ? '' : 's');
+    }
+  } catch (e) {
+    out.innerHTML = '<div class="lookup-error">Network error: ' + escapeHtml(String(e && e.message || e)) + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
 }
 
 function populateStep2Providers() {
@@ -4166,7 +4423,33 @@ function handleEvent(event) {
   } else if (event.type === 'tool_result') {
     addToolMessage(event.name + ' result', event.result);
     showTyping();
+  } else if (event.type === 'agent_hint') {
+    addAgentHint(event);
   }
+}
+
+// ═══════ Agent reliability hints (P3.4) ═══════
+// Show a discrete, color-coded banner when the safety-net catches a model
+// mistake. Helps the user understand WHY the agent is correcting itself
+// instead of seeing only a wall of failing tool calls.
+function addAgentHint(evt) {
+  if (!chatBox) return;
+  const level = evt.level || 'info';
+  const code = evt.code || 'AGENT_HINT';
+  const tool = evt.tool ? ' · ' + evt.tool : '';
+  const message = evt.message || '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'agent-hint agent-hint-' + level;
+  const icon = level === 'warn' ? '⚠' : (level === 'error' ? '✕' : 'ⓘ');
+  wrap.innerHTML =
+    '<span class="agent-hint-icon">' + icon + '</span>' +
+    '<span class="agent-hint-body">' +
+      '<span class="agent-hint-code">' + code + tool + '</span>' +
+      '<span class="agent-hint-msg">' + message.replace(/</g, '&lt;') + '</span>' +
+    '</span>';
+  chatBox.appendChild(wrap);
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 // ═══════ TTS / Read Aloud ═══════
