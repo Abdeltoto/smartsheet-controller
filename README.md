@@ -647,6 +647,61 @@ smartsheet-controller/
 
 ---
 
+## Agent Reliability
+
+LLMs hallucinate. They confuse **rows** with **columns**, retry the same failing call 12× in a row, invent column names that don't exist, and write
+formulas with functions Smartsheet doesn't support. The agent loop is wrapped in a **safety harness** that intercepts these failure modes before they
+hit the API, gives the model a structured error with a recovery path, and surfaces the rescue to the user as a discrete banner — so you can see
+exactly when the harness saved the day.
+
+| # | Safety net | What it catches | Where it lives |
+|---|---|---|---|
+| 1 | **Loop killer** | Same `(tool, args)` called > 3× in one turn — typically because the model can't read its own error | `backend/agent.py` · `LOOP_REPEAT_THRESHOLD` |
+| 2 | **Schema-guard** | `add_rows` / `update_rows` payload references columns that don't exist on the sheet (the original "row created with no values" bug) | `backend/tools.py` · `_validate_columns_for_write` |
+| 3 | **Verb subsetting** | The intent classifier missed the user's verb ("ajoute", "rajoute", "create", …) so it didn't expose the right write tool | `backend/tools.py` · `_WRITE_VERB_TOKENS` |
+| 4 | **JSON parse recovery** | Model emitted malformed tool arguments — we feed back a structured `INVALID_JSON` error instead of crashing | `backend/agent.py` · `__parse_error__` branch |
+| 5 | **Verified formula catalog** | Empirically tested list of supported Smartsheet functions + workarounds for the unsupported ones (POWER → `^`, IFS → nested IF, …) | `backend/agent.py` · `SYSTEM_PROMPT` |
+| 6 | **Action discipline** | Seven hard rules in the system prompt that ban known anti-patterns (read spam, fabricated IDs, repeating after error, …) | `backend/agent.py` · `## ACTION DISCIPLINE` |
+| 7 | **Contextual recovery hints** | Translates raw HTTP errors (401, 403, 404, 409, 429, 500) into actionable Smartsheet-specific guidance | `backend/tools.py` · `_friendly_http_error` |
+| 8 | **Few-shot examples + decision table** | Six canonical interaction patterns + a 12-row intent→tool cheatsheet so the model has worked examples | `backend/agent.py` · `## EXAMPLES` and `## INTENT → TOOL CHEATSHEET` |
+
+Every activation increments a counter exposed at `GET /api/usage` (Settings panel):
+
+```jsonc
+{
+  "agent_metrics": {
+    "turns": 42,                  // chat turns processed
+    "tool_calls": 117,            // tool calls actually executed
+    "tool_errors": 4,             // tool calls that returned an error payload
+    "loop_blocked": 1,            // times the loop killer fired
+    "schema_guard_triggered": 2,  // times add_rows/update_rows was blocked
+    "parse_errors": 0,            // malformed tool-args from the model
+    "user_rejections": 1,         // destructive actions you rejected
+    "rounds_exhausted": 0         // turns that hit MAX_TOOL_ROUNDS
+  }
+}
+```
+
+When a safety net activates, the agent also pushes an `agent_hint` event to the WebSocket so the UI can render a colored banner (info / warn /
+error) telling the user *why* the agent is correcting itself rather than burying the explanation inside a tool result.
+
+The harness is covered by **40+ dedicated tests**:
+
+```bash
+# All P3 reliability tests in one shot
+pytest tests/unit/test_agent_loop_killer.py \
+       tests/unit/test_tools_schema_guard.py \
+       tests/unit/test_tools_intent_subsetting.py \
+       tests/unit/test_agent_metrics.py \
+       tests/unit/test_agent_hints.py \
+       tests/e2e/test_agent_safety_net.py
+```
+
+Each scenario reproduces a real failure mode (the original "agent calls add_rows when asked to add a column" bug, dead-end retry loops, etc.) and
+asserts that the harness intercepts the mistake **and** the follow-up correction succeeds.
+
+---
+
 ## Running the Test Suite
 
 <div align="center">
