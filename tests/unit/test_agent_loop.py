@@ -12,7 +12,7 @@ from typing import AsyncIterator
 
 import pytest
 
-from backend.agent import MAX_TOOL_ROUNDS, Agent
+from backend.agent import MAX_TOOL_ROUNDS, Agent, _new_metrics
 
 pytestmark = [pytest.mark.unit, pytest.mark.asyncio]
 
@@ -28,6 +28,7 @@ def _make_agent() -> Agent:
     a.sheet_id = "1"
     a.sheet_context = {"summary": {"name": "S", "totalRowCount": 0, "columnCount": 0, "columns": []}}
     a.pinned_sheets = []
+    a.metrics = _new_metrics()
     return a
 
 

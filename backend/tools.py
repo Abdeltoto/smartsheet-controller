@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import httpx
 from backend.smartsheet_client import SmartsheetClient
 
@@ -12,11 +13,11 @@ def _t(name: str, desc: str, props: dict | None = None, required: list[str] | No
 _S = {"type": "string", "description": "Sheet ID"}
 
 TOOL_DEFINITIONS = [
-    _t("get_current_user", "Get current user profile."),
-    _t("list_sheets", "List all sheets (name + ID)."),
-    _t("search", "Search across the account.",
+    _t("get_current_user", "Get the authenticated user's profile (name, email, locale)."),
+    _t("list_sheets", "List every sheet the user can access (name + ID). Use when the user asks 'quelles sheets j'ai', 'mes feuilles', or needs to pick a different sheet."),
+    _t("search", "Account-wide full-text search across sheet names, cells, comments, attachments. Use for 'find', 'cherche', 'where is X'.",
        {"query": {"type": "string"}}, ["query"]),
-    _t("search_sheet", "Search within a sheet.",
+    _t("search_sheet", "Search inside ONE specific sheet's cells (faster than full-account search). Use when the user asks 'find X dans cette feuille'.",
        {"sheet_id": _S, "query": {"type": "string"}}, ["sheet_id", "query"]),
     _t("list_workspaces", "List all workspaces."),
     _t("get_workspace", "Get workspace contents.",
@@ -28,60 +29,60 @@ TOOL_DEFINITIONS = [
        {"name": {"type": "string"}, "parent_folder_id": {"type": "string"}}, ["name"]),
     _t("get_recent_items", "Get recent sheets and favorites."),
 
-    _t("get_sheet_summary", "Get sheet structure: columns, types, row count.",
+    _t("get_sheet_summary", "Get sheet schema: name, totalRowCount, columnCount, and the columns array (id/title/type/index). Use this BEFORE any write to confirm exact column titles. Cheap — call once per turn, do not loop.",
        {"sheet_id": _S}, ["sheet_id"]),
-    _t("read_rows", "Read rows. Optional range like '1-10'. Optional max_rows (default 500).",
+    _t("read_rows", "Read actual row data (cells with values). row_range is '1-10' or '5-5'. max_rows defaults to 500. Returns a list of rows with their `id`, `rowNumber`, and cells. Use this to discover real Smartsheet rowIds — do NOT invent integers like 1, 2, 3.",
        {"sheet_id": _S, "row_range": {"type": "string"}, "max_rows": {"type": "integer", "description": "Max rows to load (default 500, max 5000)"}}, ["sheet_id"]),
-    _t("get_row", "Get one row by ID.",
+    _t("get_row", "Get one full row by its real Smartsheet rowId (large integer from get_sheet_summary or read_rows). Useful as a verification read after `update_rows`.",
        {"sheet_id": _S, "row_id": {"type": "integer"}}, ["sheet_id", "row_id"]),
-    _t("get_cell_history", "Get cell change history.",
+    _t("get_cell_history", "Get audit trail of edits for one specific cell (rowId + columnId required). Use only when the user asks 'who changed X' or 'when was X modified'.",
        {"sheet_id": _S, "row_id": {"type": "integer"}, "column_id": {"type": "integer"}},
        ["sheet_id", "row_id", "column_id"]),
-    _t("get_summary_fields", "Get sheet summary fields.",
+    _t("get_summary_fields", "Get the sheet-level summary fields (KPIs at the top of the sheet). Different from `get_sheet_summary` (which returns columns).",
        {"sheet_id": _S}, ["sheet_id"]),
-    _t("analyze_sheet", "Deep analysis: structure, data, formulas, cross-refs.",
+    _t("analyze_sheet", "Deep analytical pass: structure, data quality, formula usage, cross-sheet refs. Use when the user asks 'analyse cette feuille', 'audit', 'overview'. Cheaper than chaining 5 reads.",
        {"sheet_id": _S}, ["sheet_id"]),
-    _t("detect_issues", "Scan for errors, empty cols, inconsistencies.",
+    _t("detect_issues", "Scan for problems: error cells (#REF, #INVALID), empty columns, missing descriptions, inconsistencies. Returns prioritized issues (low/medium/high).",
        {"sheet_id": _S}, ["sheet_id"]),
 
-    _t("add_rows", "Add rows. Each row: {col_name: value}.",
+    _t("add_rows", "Add new ROWS (horizontal records) to an existing sheet. Each item in `rows` is an object {ColumnName: value, OtherColumn: value} where keys are EXISTING column titles (case-sensitive). For formulas use {ColumnName: {\"formula\": \"=...\"}}. ⚠ DO NOT use this to create a new column — that's `add_column`. ⚠ Column titles MUST already exist on the sheet (check with get_sheet_summary first); unknown columns are rejected by the schema-guard with the list of valid columns.",
        {"sheet_id": _S, "rows": {"type": "array", "items": {"type": "object"}}},
        ["sheet_id", "rows"]),
-    _t("update_rows", "Update cells. [{rowId, cells: {col: {value/formula}}}].",
+    _t("update_rows", "Modify cells in EXISTING rows. `updates` is a list of {rowId: <real Smartsheet id>, cells: {ColumnName: {value: ...} OR {formula: \"=...\"}}}. Get rowIds from `read_rows` or `get_sheet_summary` — never invent them. ⚠ Argument key is `updates`, NOT `rows`. ⚠ Column titles must exist (schema-guard enforces).",
        {"sheet_id": _S, "updates": {"type": "array", "items": {"type": "object"}}},
        ["sheet_id", "updates"]),
-    _t("delete_rows", "Delete rows by IDs.",
+    _t("delete_rows", "Permanently delete rows by their real Smartsheet rowIds (large integers, not row numbers like 1/2/3). Destructive — requires user confirmation.",
        {"sheet_id": _S, "row_ids": {"type": "array", "items": {"type": "integer"}}},
        ["sheet_id", "row_ids"]),
-    _t("move_rows", "Move rows to another sheet.",
+    _t("move_rows", "Move rows from this sheet to another sheet (rows leave the source). Destructive.",
        {"sheet_id": _S, "row_ids": {"type": "array", "items": {"type": "integer"}},
         "destination_sheet_id": {"type": "string"}},
        ["sheet_id", "row_ids", "destination_sheet_id"]),
-    _t("copy_rows", "Copy rows to another sheet.",
+    _t("copy_rows", "Copy rows from this sheet to another sheet (rows stay in source). Destructive on destination.",
        {"sheet_id": _S, "row_ids": {"type": "array", "items": {"type": "integer"}},
         "destination_sheet_id": {"type": "string"}},
        ["sheet_id", "row_ids", "destination_sheet_id"]),
-    _t("sort_sheet", "Sort by columns. [{columnId, direction}].",
+    _t("sort_sheet", "Sort rows in place. `sort_criteria` is a list of {columnId: <int>, direction: 'ASCENDING'|'DESCENDING'}. Use columnIds from get_sheet_summary, not titles.",
        {"sheet_id": _S, "sort_criteria": {"type": "array", "items": {"type": "object"}}},
        ["sheet_id", "sort_criteria"]),
 
-    _t("add_column", "Add column (TEXT_NUMBER/DATE/PICKLIST/CHECKBOX/CONTACT_LIST/DATETIME/DURATION/PREDECESSOR).",
+    _t("add_column", "Add a new COLUMN (vertical field) to a sheet. Use when the user asks 'add a column', 'create a column', 'new column', 'ajoute une colonne', 'rajoute une colonne', 'nouvelle colonne', 'crée une colonne'. col_type ∈ {TEXT_NUMBER, DATE, DATETIME, PICKLIST, CHECKBOX, CONTACT_LIST, DURATION, PREDECESSOR}. `index` = position (0 = first, columnCount = append at end). ⚠ NOT for adding rows — that's `add_rows`. Pick CHECKBOX for boolean data, DATE for dates, TEXT_NUMBER for everything else if unsure.",
        {"sheet_id": _S, "title": {"type": "string"}, "col_type": {"type": "string"},
         "index": {"type": "integer"}, "description": {"type": "string"}},
        ["sheet_id", "title", "col_type", "index"]),
-    _t("update_column", "Update column title/description.",
+    _t("update_column", "Rename a column or change its description. column_id from get_sheet_summary. Use when user says 'renomme la colonne X en Y'. Cannot change col_type.",
        {"sheet_id": _S, "column_id": {"type": "integer"},
         "title": {"type": "string"}, "description": {"type": "string"}},
        ["sheet_id", "column_id"]),
-    _t("delete_column", "Delete a column.",
+    _t("delete_column", "Permanently delete a column AND all its data. Destructive — requires user confirmation. Cannot delete the primary column.",
        {"sheet_id": _S, "column_id": {"type": "integer"}}, ["sheet_id", "column_id"]),
 
-    _t("create_sheet", "Create sheet with columns.",
+    _t("create_sheet", "Create a brand-new sheet with a name and an initial set of columns. `columns` is a list of {title, type, primary?: bool} — exactly ONE column must have primary=true. Use when user says 'crée une feuille', 'new sheet'.",
        {"name": {"type": "string"}, "columns": {"type": "array", "items": {"type": "object"}}},
        ["name", "columns"]),
-    _t("delete_sheet", "Delete a sheet.",
+    _t("delete_sheet", "Permanently delete an entire sheet (and all rows, attachments, history). Destructive — confirm first.",
        {"sheet_id": _S}, ["sheet_id"]),
-    _t("rename_sheet", "Rename a sheet.",
+    _t("rename_sheet", "Rename a sheet (only changes the title; sheet_id stays the same).",
        {"sheet_id": _S, "new_name": {"type": "string"}}, ["sheet_id", "new_name"]),
     _t("copy_sheet", "Copy a sheet.",
        {"sheet_id": _S, "new_name": {"type": "string"},
@@ -113,9 +114,9 @@ TOOL_DEFINITIONS = [
 
     _t("list_discussions", "List sheet discussions.",
        {"sheet_id": _S}, ["sheet_id"]),
-    _t("list_row_discussions", "List row discussions.",
+    _t("list_row_discussions", "List discussions/comments on ONE specific row. row_id MUST be a real Smartsheet rowId from get_sheet_summary or read_rows. ⚠ Do NOT iterate this on fabricated IDs (1, 2, 3) — that produces 404s and noise.",
        {"sheet_id": _S, "row_id": {"type": "integer"}}, ["sheet_id", "row_id"]),
-    _t("add_comment", "Reply to a discussion.",
+    _t("add_comment", "Add a comment INSIDE an existing discussion (reply). For a brand-new discussion on a row, use `create_row_discussion` instead.",
        {"sheet_id": _S, "discussion_id": {"type": "integer"}, "text": {"type": "string"}},
        ["sheet_id", "discussion_id", "text"]),
     _t("create_row_discussion", "Start discussion on a row.",
@@ -124,7 +125,7 @@ TOOL_DEFINITIONS = [
 
     _t("list_attachments", "List sheet attachments.",
        {"sheet_id": _S}, ["sheet_id"]),
-    _t("list_row_attachments", "List attachments on a single row.",
+    _t("list_row_attachments", "List attachments on ONE specific row. row_id MUST be a real Smartsheet rowId. ⚠ Do NOT loop this over fabricated IDs (1, 2, 3) — for sheet-wide attachments use `list_attachments` instead.",
        {"sheet_id": _S, "row_id": {"type": "integer"}}, ["sheet_id", "row_id"]),
     _t("get_attachment", "Get attachment details/URL.",
        {"sheet_id": _S, "attachment_id": {"type": "integer"}}, ["sheet_id", "attachment_id"]),
@@ -285,24 +286,38 @@ _TOOLS_BY_INTENT = {
     "webhook": {"list_webhooks", "create_webhook", "delete_webhook", "update_webhook"},
 }
 
-# Keywords that gate each intent (lowercase, FR + EN)
+# Keywords that gate each intent (lowercase substrings, FR + EN).
+# Substring matching is brittle for inflected languages (e.g. "ajoute une colonne"
+# does not contain "ajoute colonne"), so we also use _WRITE_VERB_TOKENS below
+# as a safety net.
 _INTENT_KEYWORDS = {
     "write_row": [
-        "add", "ajout", "create row", "créer ligne", "insert", "insér",
-        "update", "modif", "change", "set ", "fix ", "corrige",
+        "add", "ajout", "rajout", "create row", "créer ligne", "creer ligne",
+        "insert", "insér", "inser",
+        "update", "modif", "change", "changer", "set ", "fix ", "corrige",
         "delete row", "supprime", "remov", "efface", "drop row",
-        "move row", "déplace", "copy row", "duplique",
-        "sort", "trier",
+        "move row", "déplace", "deplace", "copy row", "duplique",
+        "sort", "trier", "tri ",
+        "ligne", "row ", "rows",
+        "fill", "remplis", "remplit", "remplir",
     ],
     "write_structure": [
-        "add column", "ajout colonne", "ajoute colonne", "create column", "nouvelle colonne",
-        "delete column", "supprime colonne", "remove column",
-        "rename", "renomme",
+        "column", "colonne", "colonnes",
+        "add column", "ajout colonne", "ajoute colonne", "create column",
+        "nouvelle colonne", "nouvelles colonnes", "ajoute une colonne",
+        "ajouter une colonne", "ajouter colonne", "rajoute une colonne",
+        "rajouter une colonne", "crée une colonne", "creer une colonne",
+        "create a column", "make a column", "new column",
+        "delete column", "supprime colonne", "supprimer la colonne",
+        "supprimer une colonne", "remove column", "drop column", "vire la colonne",
+        "rename column", "renomme la colonne", "renommer la colonne",
+        "rename", "renomme", "renommer",
         "create sheet", "crée feuille", "nouvelle feuille", "new sheet",
-        "delete sheet", "supprime feuille",
+        "create a sheet", "make a sheet", "créer une feuille", "creer une feuille",
+        "delete sheet", "supprime feuille", "supprimer feuille",
         "copy sheet", "duplique feuille", "move sheet",
-        "create folder", "nouveau dossier",
-        "cross-sheet", "cross sheet", "référence",
+        "create folder", "nouveau dossier", "créer un dossier",
+        "cross-sheet", "cross sheet", "référence", "reference",
     ],
     "share": [
         "share", "partage", "permission", "access", "accès", "invite",
@@ -340,21 +355,73 @@ _INTENT_KEYWORDS = {
 }
 
 
+# Pure write-action verbs (FR + EN). If ANY token below appears as a standalone
+# word in the user message, we widen the tool subset to include BOTH write_row
+# AND write_structure intents — because users frequently say "ajoute une
+# colonne" / "create a row" without using the exact phrase the substring
+# matcher above expects. This catches the inflection problem at the root.
+_WRITE_VERB_TOKENS = {
+    # English
+    "add", "create", "make", "insert", "new", "build", "set", "update",
+    "modify", "change", "edit", "rename", "move", "copy", "duplicate",
+    "remove", "delete", "drop", "clear", "fix", "fill", "import", "upload",
+    "publish", "rename",
+    # French (covers most inflections)
+    "ajout", "ajoute", "ajouter", "ajoutes", "ajoutez", "ajoutera", "ajouterons",
+    "rajout", "rajoute", "rajouter", "rajoutes", "rajoutez",
+    "crée", "créer", "crees", "créez", "creer", "cree", "créée",
+    "fais", "faire", "faites", "fait",
+    "modif", "modifie", "modifier", "changer", "modifiez", "changez",
+    "supprim", "supprime", "supprimer", "supprimez",
+    "efface", "effacer", "effacez",
+    "vire", "vires", "virer", "virez", "casse", "cassez",
+    "renomm", "renomme", "renommer", "renommez",
+    "remplir", "remplis", "remplit", "remplissez",
+    "duplique", "dupliquer", "dupliquez",
+    "déplac", "déplace", "déplacer", "déplacez", "deplace", "deplacer",
+    "copier", "copie", "copies", "copiez",
+    "mets", "mettre", "met", "mettez",
+    "passe", "passer", "passez",
+    "transforme", "transformer", "transformez",
+    "remplace", "remplacer", "remplacez",
+}
+
+_WORD_TOKEN_RE = re.compile(r"[a-zàâäéèêëïîôöùûüç]+", re.IGNORECASE)
+
+
+def _tokenize_words(text: str) -> set[str]:
+    return {m.group(0).lower() for m in _WORD_TOKEN_RE.finditer(text)}
+
+
 def select_tools_for_message(user_message: str, all_tools: list[dict] | None = None) -> list[dict]:
     """Return the subset of TOOL_DEFINITIONS relevant to the user's intent.
     Reduces tokens by ~70% on read-only queries while never hiding write tools
-    when the user clearly asks for them."""
+    when the user clearly asks for them.
+
+    Layered detection:
+      1. Substring keyword match per intent (precise but brittle).
+      2. Verb-token safety net: any pure write verb in the message unlocks
+         BOTH write_row and write_structure (catches inflection misses).
+      3. Bottom safety floor: if subset is too small, return everything.
+    """
     if all_tools is None:
         all_tools = TOOL_DEFINITIONS
     if not user_message:
         return all_tools  # be safe — no message means new conversation
 
     msg = user_message.lower()
+    tokens = _tokenize_words(user_message)
     intents: set[str] = {"read"}  # always include analysis tools
 
     for intent, keywords in _INTENT_KEYWORDS.items():
         if any(kw in msg for kw in keywords):
             intents.add(intent)
+
+    # Verb-token safety net — write_row + write_structure travel together
+    # because they are the most-confused pair (add row vs add column).
+    if tokens & _WRITE_VERB_TOKENS:
+        intents.add("write_row")
+        intents.add("write_structure")
 
     allowed: set[str] = set(_CORE_TOOLS)
     for intent in intents:
@@ -362,17 +429,233 @@ def select_tools_for_message(user_message: str, all_tools: list[dict] | None = N
 
     selected = [t for t in all_tools if t["name"] in allowed]
     # Safety net: if we end up with nothing useful, return everything
-    if len(selected) < 5:
+    if len(selected) < 8:
         return all_tools
     return selected
+
+
+# Keys that may appear inside an add_rows row that are NOT column names —
+# they are positional/structural hints accepted by the Smartsheet API.
+_ADD_ROW_RESERVED_KEYS = {
+    "cells", "toBottom", "toTop", "parentId", "siblingId", "above", "below",
+    "expanded", "locked", "format",
+}
+
+
+def _extract_referenced_columns(payload: list[dict] | None, kind: str) -> set[str]:
+    """Pull out every column-name reference from an add_rows / update_rows payload.
+
+    kind: 'add_rows' or 'update_rows'.
+
+    Recognises BOTH shapes the LLM produces:
+      1. friendly shape:  {"ColumnName": value, ...}
+      2. API shape:       {"cells": [{"columnName": "X", "value": ...}, ...]}
+    Cells that use `columnId` (numeric) are skipped — IDs are already
+    pre-validated by Smartsheet itself.
+    """
+    refs: set[str] = set()
+    if not payload:
+        return refs
+    for row in payload:
+        if not isinstance(row, dict):
+            continue
+        # Always inspect API-style `cells` lists, regardless of kind.
+        cells = row.get("cells")
+        if isinstance(cells, list):
+            for cell in cells:
+                if not isinstance(cell, dict):
+                    continue
+                # Only `columnName` is a name-reference we can validate.
+                # `columnId` is a numeric handle — leave it to the API.
+                col_name = cell.get("columnName")
+                if isinstance(col_name, str) and col_name.strip():
+                    refs.add(col_name)
+        elif kind == "update_rows" and isinstance(cells, dict):
+            # Friendly update_rows shape: cells={"ColName": value, ...}
+            refs.update(str(k) for k in cells.keys())
+
+        if kind == "add_rows":
+            # Friendly add_rows shape: row keys are column names.
+            for k in row.keys():
+                if k in _ADD_ROW_RESERVED_KEYS:
+                    continue
+                refs.add(str(k))
+    return refs
+
+
+async def _validate_columns_for_write(
+    client: SmartsheetClient,
+    sheet_id: str,
+    payload: list[dict] | None,
+    kind: str,
+) -> dict | None:
+    """Return None if the payload only references existing columns on the sheet,
+    otherwise return a structured error dict explaining exactly what's wrong.
+
+    This is the schema-guard that prevents the silent "row created but empty"
+    bug — when the LLM uses a column name that doesn't exist, the upstream
+    client used to drop the cell silently. We catch it here loudly with a
+    helpful message including the list of valid columns.
+    """
+    referenced = _extract_referenced_columns(payload, kind)
+    if not referenced:
+        # No column-name keys at all. Either the payload is API-shaped already
+        # (cells: [{columnId, value}]) or it's empty — let the client handle it.
+        return None
+
+    try:
+        sheet = await client.get_sheet(sheet_id, page_size=0)
+    except Exception:
+        # Couldn't pre-fetch (network blip, mock client, etc.) — fall through
+        # and let the actual API call surface its own error.
+        return None
+
+    if not isinstance(sheet, dict):
+        return None
+    columns = sheet.get("columns") or []
+    if not columns:
+        return None  # empty / mock — skip validation
+
+    valid_names = {c["title"] for c in columns if isinstance(c, dict) and "title" in c}
+    if not valid_names:
+        return None
+
+    unknown = sorted(referenced - valid_names)
+    if not unknown:
+        return None
+
+    tool_name = "add_rows" if kind == "add_rows" else "update_rows"
+    return {
+        "error": "UNKNOWN_COLUMNS",
+        "tool": tool_name,
+        "unknown_columns": unknown,
+        "valid_columns": sorted(valid_names),
+        "hint": (
+            f"The column(s) {unknown} do NOT exist on sheet '{sheet.get('name', sheet_id)}'. "
+            "Smartsheet column names are CASE-SENSITIVE and must match exactly. "
+            "Choose ONE: "
+            "(a) Use one of the valid column names listed in 'valid_columns'. "
+            "(b) If you intend to CREATE a new column, call the 'add_column' tool first, "
+            "then retry add_rows / update_rows referencing it. "
+            "(c) Re-read the sheet schema with 'get_sheet_summary' to confirm the exact spelling. "
+            "Do NOT silently retry with the same column name — it will fail again."
+        ),
+    }
 
 
 async def execute_tool(client: SmartsheetClient, tool_name: str, args: dict) -> str:
     try:
         result = await _dispatch(client, tool_name, args)
         return json.dumps(result, default=str, ensure_ascii=False)
+    except KeyError as e:
+        # The LLM omitted a required argument — surface it clearly so the next
+        # tool round can self-correct instead of repeating the mistake.
+        missing = str(e).strip("'\"")
+        hint = ""
+        if tool_name == "add_rows" and missing == "rows":
+            hint = " To create a new COLUMN (not a row), use the 'add_column' tool instead."
+        elif tool_name == "update_rows" and missing == "updates":
+            hint = " The 'update_rows' tool needs an 'updates' array, not 'rows'."
+        return json.dumps({
+            "error": f"Missing required argument '{missing}' for tool '{tool_name}'.{hint}",
+            "missing_argument": missing,
+            "tool": tool_name,
+        })
+    except httpx.HTTPStatusError as e:
+        return json.dumps(_friendly_http_error(e, tool_name, args))
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return json.dumps({"error": str(e), "tool": tool_name, "hint": _generic_hint(str(e), tool_name)})
+
+
+def _generic_hint(err_msg: str, tool_name: str) -> str:
+    """Best-effort extraction of an actionable hint for non-HTTP exceptions."""
+    low = err_msg.lower()
+    if "timeout" in low or "timed out" in low:
+        return "Network timeout — retry once. If it persists, the Smartsheet API may be slow."
+    if "ssl" in low or "certificate" in low:
+        return "Secure connection issue — check the network. Do not retry blindly."
+    if "json" in low and ("decode" in low or "parse" in low):
+        return "Response was not valid JSON — likely a transient API hiccup. Retry once."
+    return ""
+
+
+def _friendly_http_error(e: httpx.HTTPStatusError, tool_name: str, args: dict) -> dict:
+    """Map common Smartsheet HTTP errors to actionable hints the LLM can act on."""
+    status = e.response.status_code if e.response is not None else 0
+    body_preview = ""
+    try:
+        body_preview = e.response.text[:400] if e.response is not None else ""
+    except Exception:
+        body_preview = ""
+    body_low = body_preview.lower()
+
+    base = {
+        "error": f"HTTP {status} from Smartsheet API",
+        "tool": tool_name,
+        "status_code": status,
+        "response_preview": body_preview,
+    }
+
+    if status == 401:
+        base["hint"] = (
+            "The Smartsheet token is invalid or expired. Stop calling tools and tell the user "
+            "their token needs to be refreshed."
+        )
+        return base
+    if status == 403:
+        base["hint"] = (
+            "Permission denied for this operation. The user lacks the required access level "
+            "(viewer/editor/admin/owner) on this sheet/workspace. Tell the user — do NOT retry."
+        )
+        return base
+    if status == 404:
+        # Distinguish row-level vs sheet-level
+        if "row" in tool_name or "row_id" in args:
+            base["hint"] = (
+                f"Row not found. The row_id ({args.get('row_id')}) does not exist on this sheet. "
+                "Smartsheet rowIds are large integers — call `read_rows` or `get_sheet_summary` first to get real IDs. "
+                "Do NOT iterate this call on fabricated IDs (1, 2, 3, ...)."
+            )
+        elif "attachment" in tool_name:
+            base["hint"] = "Attachment not found. The attachment_id may be stale or the attachment was deleted."
+        elif "sheet" in tool_name:
+            base["hint"] = (
+                "Sheet not found. Either the sheet_id is wrong, the sheet was deleted, or it was just created "
+                "and the API is eventually consistent — wait 1s and retry once."
+            )
+        else:
+            base["hint"] = "Resource not found. Verify the ID with a list/get call before retrying."
+        return base
+    if status == 409:
+        base["hint"] = "Conflict — the resource is in a state that doesn't allow this operation (e.g. already exists, locked)."
+        return base
+    if status == 429:
+        base["hint"] = "Rate-limited by Smartsheet. Stop calling tools and tell the user to wait ~30s."
+        return base
+    if status == 400:
+        if "invalid" in body_low and "column" in body_low:
+            base["hint"] = (
+                "Invalid column value. Most likely you tried to put a value of one type into a column of another type "
+                "(e.g. boolean into TEXT_NUMBER, or date string into TEXT_NUMBER). "
+                "Check the column type with `get_sheet_summary` and either pick the right column or `add_column` of the right type."
+            )
+        elif "formula" in body_low or "unparseable" in body_low:
+            base["hint"] = (
+                "Smartsheet rejected the formula. Common causes: function does not exist in Smartsheet "
+                "(e.g. POWER → use `^`, CONCATENATE → use `+`, IFS → use nested IF), or `TRUE()` instead of bare `TRUE`, "
+                "or wrong reference syntax. Re-read the formula catalog in your system prompt."
+            )
+        elif "primary" in body_low:
+            base["hint"] = "create_sheet requires EXACTLY ONE column with `primary: true`."
+        else:
+            base["hint"] = "Bad request — check argument shapes against the tool's schema."
+        return base
+    if status >= 500:
+        base["hint"] = "Smartsheet server error — retry the call ONCE. If it fails again, tell the user."
+        return base
+
+    base["hint"] = "Unexpected HTTP status — inspect response_preview and decide whether to retry."
+    return base
 
 
 async def _dispatch(client: SmartsheetClient, name: str, args: dict):
@@ -411,8 +694,18 @@ async def _dispatch(client: SmartsheetClient, name: str, args: dict):
     if name == "detect_issues":
         return await client.detect_issues(args["sheet_id"])
     if name == "add_rows":
+        guard = await _validate_columns_for_write(
+            client, args["sheet_id"], args.get("rows"), kind="add_rows"
+        )
+        if guard is not None:
+            return guard
         return await client.add_rows(args["sheet_id"], args["rows"])
     if name == "update_rows":
+        guard = await _validate_columns_for_write(
+            client, args["sheet_id"], args.get("updates"), kind="update_rows"
+        )
+        if guard is not None:
+            return guard
         return await client.update_rows(args["sheet_id"], args["updates"])
     if name == "delete_rows":
         return await client.delete_rows(args["sheet_id"], args["row_ids"])

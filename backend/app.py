@@ -209,6 +209,104 @@ async def validate_token(req: ValidateTokenRequest):
     }
 
 
+class LookupSheetRequest(BaseModel):
+    smartsheet_token: str
+    sheet_id: str
+
+
+@app.post("/api/lookup-sheet")
+async def lookup_sheet(req: LookupSheetRequest):
+    """Resolve a sheet ID against the given token.
+
+    Used by the connect wizard "By ID" tab : user pastes a sheet ID and we
+    confirm the sheet exists and is accessible before letting them start a
+    session on it. Returns the sheet name and a quick summary on success.
+    """
+    token = req.smartsheet_token.strip()
+    sheet_id = req.sheet_id.strip()
+    if not token or len(token) < 16:
+        return JSONResponse({"error": "Smartsheet token missing or too short."}, status_code=400)
+    if not sheet_id.isdigit():
+        return JSONResponse({"error": "Sheet ID must be numeric (e.g. 7340597274509188)."}, status_code=400)
+
+    ss_client = SmartsheetClient(token)
+    try:
+        summary = await ss_client.get_sheet_summary(sheet_id)
+    except Exception as e:
+        await ss_client.close()
+        log.warning(f"lookup-sheet failed for {sheet_id}: {traceback.format_exc().splitlines()[-1]}")
+        return JSONResponse({"error": _friendly_error(e)}, status_code=400)
+
+    try:
+        await ss_client.close()
+    except Exception:
+        pass
+
+    return {
+        "id": sheet_id,
+        "name": summary.get("name", ""),
+        "row_count": summary.get("totalRowCount", 0),
+        "column_count": summary.get("columnCount", 0),
+    }
+
+
+class CreateBlankSheetRequest(BaseModel):
+    smartsheet_token: str
+    name: str
+    columns: list[dict] | None = None
+
+
+@app.post("/api/create-sheet")
+async def create_blank_sheet(req: CreateBlankSheetRequest):
+    """Create a brand-new sheet with sensible starter columns.
+
+    Used by the connect wizard "Create new" tab. The user gives a name, the
+    server creates a blank sheet (Task / Status / Due Date / Notes by default
+    or caller-provided columns), and the new ID flows back to the wizard so
+    the session opens directly on it.
+    """
+    token = req.smartsheet_token.strip()
+    name = (req.name or "").strip()
+    if not token or len(token) < 16:
+        return JSONResponse({"error": "Smartsheet token missing or too short."}, status_code=400)
+    if not name:
+        return JSONResponse({"error": "Please give the new sheet a name."}, status_code=400)
+    if len(name) > 50:
+        return JSONResponse({"error": "Sheet name must be 50 characters or fewer."}, status_code=400)
+
+    columns = req.columns or [
+        {"title": "Task", "primary": True, "type": "TEXT_NUMBER"},
+        {"title": "Status", "type": "PICKLIST", "options": ["Not Started", "In Progress", "Done"]},
+        {"title": "Due Date", "type": "DATE"},
+        {"title": "Notes", "type": "TEXT_NUMBER"},
+    ]
+
+    ss_client = SmartsheetClient(token)
+    try:
+        created = await ss_client.create_sheet(name, columns)
+    except Exception as e:
+        await ss_client.close()
+        log.warning(f"create-sheet failed for '{name}': {traceback.format_exc().splitlines()[-1]}")
+        return JSONResponse({"error": _friendly_error(e)}, status_code=400)
+
+    try:
+        await ss_client.close()
+    except Exception:
+        pass
+
+    payload = created.get("result") or created.get("data") or created
+    new_id = payload.get("id") or created.get("id")
+    if not new_id:
+        return JSONResponse({"error": "Sheet created but Smartsheet did not return an ID."}, status_code=500)
+
+    log.info(f"Blank sheet '{name}' created (id={new_id})")
+    return {
+        "id": str(new_id),
+        "name": payload.get("name") or name,
+        "permalink": payload.get("permalink", ""),
+    }
+
+
 class SessionConfig(BaseModel):
     smartsheet_token: str
     sheet_id: str
@@ -662,11 +760,17 @@ async def get_usage(session_id: str):
     _touch(session_id)
     llm = session.get("llm")
     ss_client = session.get("smartsheet")
+    agent = session.get("agent")
     return {
         "tokens": llm.usage if llm else None,
         "provider": llm.provider if llm else None,
         "current_model": llm.model if llm else None,
         "cache": ss_client.cache_stats() if ss_client else None,
+        # Agent reliability metrics: each counter ticks every time a safety
+        # net (loop killer, schema-guard, parse recovery) catches a model
+        # mistake, so the user can see in Settings how often the harness
+        # actually saved the day.
+        "agent_metrics": agent.metrics if agent and hasattr(agent, "metrics") else None,
     }
 
 

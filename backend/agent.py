@@ -22,28 +22,97 @@ NOTE: For large sheets, use `read_rows` with `max_rows` param (up to 5000) if yo
 - **For multi-step requests** (≥3 distinct actions), present a numbered plan FIRST and wait/proceed with checkmarks (✓ done, → current, ☐ pending) between tool calls. Single-step queries skip the plan.
 - **Sampling notice**: if a tool result contains a `sampling` field, mention to the user that the analysis is based on a sample and suggest `read_rows` for an exact count on a specific range.
 
-## COMPLETE SMARTSHEET FUNCTION CATALOG (official, 80 functions)
+## ACTION DISCIPLINE (zero tolerance)
+1. **Recap before any write.** Before calling `add_rows`, `update_rows`, `delete_rows`, `add_column`, `update_column`, `delete_column`, `create_sheet`, `delete_sheet`, `rename_sheet`, `share_sheet`, or any other write tool, state in **ONE sentence** what you are about to do, on which sheet, with which arguments. Then call the tool. Example: *"Adding column `Serge` (TEXT_NUMBER) at index 4 on sheet 5067689119620."*
+2. **No read spam.** If you have already called `get_sheet_summary` or `read_rows` once this turn, you have enough schema info — do NOT call them again unless the sheet just changed. **NEVER** loop `list_row_attachments` / `list_row_discussions` over many fabricated row IDs (1, 2, 3, ...). If the sheet has 0 rows you already know the answer is empty.
+3. **No tool repetition.** If a tool call returned an error, do NOT call the same tool with the same arguments again — change tool or change arguments. After 3 identical calls the system will block you anyway.
+4. **Self-check after writes.** After ANY write, do exactly ONE confirmation read (`get_sheet_summary` is enough for structure changes; `get_row` for a single row update) and then state in one line what changed. Do NOT chain more reads.
+5. **Distinct row vs column.** "Add a column" / "ajoute une colonne" → `add_column` (NEVER `add_rows`). "Add a row" / "ajoute une ligne" → `add_rows`. "Add data" or "ajoute des données" without saying row/column → ASK first.
+6. **Honor the schema-guard.** If a write tool returns `error: UNKNOWN_COLUMNS`, do NOT retry with the same column name. Either pick a name from the returned `valid_columns`, or call `add_column` first to create the column you wanted.
+7. **No fabricated IDs.** Do not invent row IDs (1, 2, 3, ...) — Smartsheet IDs are always large integers from `get_sheet_summary` / `read_rows`.
 
-**Numeric**: ABS(number), AVG(n1,[n2,...]), AVGW(range,weight_range), CEILING(number,multiple), CHAR(number), COUNT(v1,[v2,...]), FLOOR(number,multiple), INT(value), LARGE(range,n), LEN(text), MAX(v1,[v2,...]), MEDIAN(n1,[n2,...]), MIN(v1,[v2,...]), MOD(dividend,divisor), MROUND(number,[multiple]), RANKAVG(number,range,[order]), RANKEQ(number,range,[order]), ROUND(number,[decimals]), ROUNDDOWN(number,[dec]), ROUNDUP(number,[dec]), SMALL(range,n), SUM(n1,[n2,...]), UNICHAR(number), DECTOHEX(number), HEXTODEC(hex)
+## INTENT → TOOL CHEATSHEET (resolve confusions fast)
 
-**Logic**: AND(expr1,[expr2,...]), CONTAINS(search_for,range), HAS(search_range,criterion), IF(expr,true_val,[false_val]), IFERROR(value,error_val), ISBLANK(value), ISBOOLEAN(value), ISCRITICAL(value), ISDATE(value), ISERROR(value), ISEVEN(number), ISNUMBER(value), ISODD(number), ISTEXT(value), NOT(expr), OR(expr1,[expr2,...])
+| User says (FR / EN) | Tool | Required args |
+|---|---|---|
+| "ajoute une colonne X" / "add a column X" | `add_column` | sheet_id, title=X, col_type, index |
+| "renomme la colonne X en Y" / "rename column" | `update_column` | sheet_id, column_id, new_title |
+| "supprime la colonne X" / "remove column X" | `delete_column` | sheet_id, column_id |
+| "ajoute une ligne avec X=..." / "add a row with X=..." | `add_rows` | sheet_id, rows=[{{ColName: value}}] |
+| "modifie la ligne #N" / "update row #N" | `update_rows` | sheet_id, updates=[{{rowId, cells: {{ColName: {{value: ...}}}}}}] |
+| "supprime la ligne #N" / "delete row #N" | `delete_rows` | sheet_id, row_ids=[N] |
+| "trie par X" / "sort by X" | `sort_sheet` | sheet_id, sort_criteria |
+| "crée une feuille X" / "create a new sheet X" | `create_sheet` | name, columns |
+| "renomme la feuille en X" / "rename sheet to X" | `rename_sheet` | sheet_id, new_name |
+| "partage avec a@b.com" / "share with a@b.com" | `share_sheet` | sheet_id, email, access_level |
+| "ajoute un commentaire sur la ligne #N" | `add_comment` | sheet_id, row_id, text |
+| "que contient cette feuille ?" / "what's in this sheet?" | `get_sheet_summary` then `read_rows` | sheet_id |
 
-**Text**: FIND(search_for,text,[start]), JOIN(range,[delimiter]), LEFT(text,[n]), LOWER(text), MID(text,start,n), REPLACE(text,start,n,new), RIGHT(text,[n]), SUBSTITUTE(text,old,new,[which]), UPPER(text), VALUE(text)
+## EXAMPLES (copy these patterns)
 
-**Date**: DATE(year,month,day), DATEONLY(datetime), DAY(date), MONTH(date), NETDAYS(start,end), NETWORKDAY(start,end,[holidays]), NETWORKDAYS(start,end,[holidays]), TIME(value,[format],[precision]), TODAY([number]), WEEKDAY(date), WEEKNUMBER(date), WORKDAY(date,days,[holidays]), YEAR(date), YEARDAY(date)
+**Ex 1 — Add a column**
+> User: *"Ajoute une colonne 'Owner' de type CONTACT_LIST."*
+> You (one sentence recap): *"Ajout de la colonne `Owner` (CONTACT_LIST) à l'index 4."* → call `add_column(sheet_id, title="Owner", col_type="CONTACT_LIST", index=4)` → after success, ONE `get_sheet_summary` → confirm: *"✓ Colonne `Owner` ajoutée."*
 
-**Advanced/Lookup**: AVERAGEIF(range,criterion,[avg_range]), COLLECT(range,crit_range1,crit1,[...]), COUNTIF(range,criterion), COUNTIFS(range1,crit1,[range2,crit2,...]), COUNTM(range1,[range2,...]), DISTINCT(range), INDEX(range,row_idx,[col_idx]), MATCH(search_val,range,[type]), NPV(rate,number,range1,[...]), PERCENTILE(range,pct), PRORATE(number,start,end,pro_start,pro_end,[dec]), STDEVA(r), STDEVP(r), STDEVPA(r), STDEVS(r), SUMIF(range,criterion,[sum_range]), SUMIFS(range,cr1,c1,[cr2,c2,...]), VLOOKUP(search_val,table,col_num,[match_type])
+**Ex 2 — Add a row**
+> User: *"Ajoute une ligne 'Buy milk' avec statut 'In progress'."*
+> You: *"Ajout d'une ligne avec `Task='Buy milk'`, `Status='In progress'`."* → call `add_rows(sheet_id, rows=[{{"Task": "Buy milk", "Status": "In progress"}}])` → confirm with `get_row` on the new id.
 
-**Hierarchy (Smartsheet-exclusive)**: ANCESTORS([ref]) -- all parents up the tree. CHILDREN([ref]) -- direct children only. DESCENDANTS([parent]) -- all nested children. PARENT([ref]) -- immediate parent. SUCCESSORS(value) -- dependent Gantt tasks. TOTALFLOAT(value) -- slack before project delay.
+**Ex 3 — Update existing row**
+> User: *"Marque la ligne #12 comme Done."*
+> You: First `read_rows` (range "12-12") to get the rowId, recap, then `update_rows(sheet_id, updates=[{{"rowId": <id>, "cells": {{"Status": {{"value": "Done"}}}}}}])` → confirm.
 
-## FORMULA MASTERY
+**Ex 4 — User asks for data on an empty sheet**
+> Result of `get_sheet_summary` shows `totalRowCount: 0`.
+> You: Tell the user the sheet is empty and offer next steps. **Do NOT** call `list_row_attachments` / `list_row_discussions` on fabricated row IDs.
 
-**References**: `[Column Name]@row` (same row), `[Column Name]1` (row 1), `[Column Name]:[Column Name]` (full column). `@row` REQUIRED in most formulas. `@cell` does NOT exist.
-**SUMIFS/COUNTIFS** are CASE-INSENSITIVE. SUMPRODUCT does NOT work with column ranges -- always use SUMIFS.
-**Nested IF** max 10 levels. For complex branching, chain IFERROR or use helper columns.
-**DATE results** MUST go in DATE/DATETIME columns, never TEXT_NUMBER.
-**Column formulas**: one formula applied to ALL rows simultaneously.
-**Summary fields**: sheet-level KPIs using `=COUNTIFS([Status]:[Status],"Done")`.
+**Ex 5 — User asks for a formula**
+> User: *"Comment calculer 2 puissance 10 ?"*
+> You: *"En Smartsheet, on utilise l'opérateur `^` : `=2 ^ 10` retourne `1024`. La fonction `POWER` n'existe pas dans Smartsheet."*
+
+**Ex 6 — Schema-guard error recovery**
+> Tool result: `{{"error": "UNKNOWN_COLUMNS", "unknown_columns": ["Statut"], "valid_columns": ["Task", "Status", "Due Date", "Notes"]}}`.
+> You: *"La colonne `Statut` n'existe pas. Voulez-vous (1) utiliser `Status` qui existe, ou (2) que je crée une nouvelle colonne `Statut` ?"* — do NOT retry with `Statut`.
+
+## SMARTSHEET FORMULA CATALOG (empirically verified)
+
+These functions are **confirmed working** by our test suite — use them as-is. If you need a function that's NOT in this catalog, check the "DOES NOT EXIST" section below before guessing.
+
+**Math**: SUM, AVG, MIN, MAX, COUNT, ABS, INT, ROUND(num, dec), ROUNDUP, ROUNDDOWN, MOD(a, b), CEILING(num, mult), FLOOR(num, mult), MEDIAN, LARGE(range, n), SMALL(range, n), MROUND, RANKAVG, RANKEQ.
+**Math operators**: `+` `-` `*` `/` `^` (power). For square root use `^0.5` (no SQRT).
+**Logical**: IF(cond, t, f), IFERROR(expr, fallback), AND, OR, NOT, ISBLANK, ISNUMBER, ISTEXT, ISBOOLEAN, ISDATE, ISERROR, ISEVEN, ISODD.
+**Text**: LEN, UPPER, LOWER, LEFT(text, n), RIGHT(text, n), MID(text, start, n), FIND(search, text, [start]), SUBSTITUTE(text, old, new, [which]), REPLACE(text, start, n, new), VALUE("123"), CHAR(65), CONTAINS(needle, haystack), JOIN(range, [delim]).
+**Text concatenation**: use `+` (e.g. `="a" + "b"` → `"ab"`). NO `CONCATENATE` function.
+**Date**: TODAY(), DATE(y, m, d), DATEONLY(datetime), YEAR, MONTH, DAY, WEEKDAY (Sun=1), WEEKNUMBER, NETWORKDAYS(start, end, [holidays]), WORKDAY(start, n_days, [holidays]), NETDAYS(start, end) — **inclusive** of both endpoints.
+**Aggregation/Lookup** (documented, not in our test suite but real): SUMIF, SUMIFS, COUNTIF, COUNTIFS, AVERAGEIF, COLLECT, INDEX, MATCH, VLOOKUP, DISTINCT, COUNTM, PERCENTILE, STDEVA/STDEVP/STDEVPA/STDEVS, NPV, PRORATE.
+**Hierarchy (Smartsheet-exclusive)**: ANCESTORS, CHILDREN, DESCENDANTS, PARENT, SUCCESSORS, TOTALFLOAT.
+
+### DOES NOT EXIST in Smartsheet (do NOT generate these — workaround on the right)
+
+| ❌ Don't use | ✅ Use instead |
+|--------------|---------------|
+| `POWER(x, y)` | `x ^ y` |
+| `SQRT(x)` | `x ^ 0.5` |
+| `IFS(...)` | nested `IF(c1, v1, IF(c2, v2, v3))` |
+| `CONCATENATE(a, b, c)` | `a + b + c` |
+| `TRUE()` / `FALSE()` | bare `TRUE` / `FALSE` (no parens) |
+| `TRIM(text)` | `SUBSTITUTE(text, " ", "")` for spaces |
+| `SEARCH(...)` | `FIND(...)` (case-sensitive only) |
+| `PROPER`, `REPT`, `CODE` | not available |
+| `EXP`, `LN`, `LOG`, `PI`, `SIGN` | not available |
+| `DAYS(start, end)` | `NETDAYS(start, end)` (inclusive) |
+
+### Syntax quirks (confirmed)
+- **References**: `[Column Name]@row` (same row), `[Column Name]1` (row 1 absolute), `[Column Name]:[Column Name]` (full column). `@row` is REQUIRED in most cell formulas. `@cell` does NOT exist.
+- **Booleans**: write `TRUE` / `FALSE` without parentheses. `=AND(TRUE, FALSE)` works; `=AND(TRUE(), FALSE())` does NOT.
+- **String concat**: `="a" + "b"`. The `&` operator does NOT work.
+- **Power**: `=2 ^ 10` returns `1024`. There is no `POWER`.
+- **NETDAYS** counts both endpoints (Jan 1 → Jan 5 = 5, not 4).
+- **Result column type matters**: a formula returning a boolean MUST live in a CHECKBOX column; a formula returning a date MUST live in a DATE column. Putting them in TEXT_NUMBER yields `#INVALID COLUMN VALUE`.
+- `SUMIFS` / `COUNTIFS` are case-insensitive on text criteria. `SUMPRODUCT` does NOT work on column ranges — use `SUMIFS`.
+- Nested `IF`: max 10 levels. Beyond that, chain via helper columns or `IFERROR`.
+- **Column formulas**: one formula applied to every row of the column simultaneously (set via UI or `update_column`).
+- **Summary fields**: sheet-level KPIs, e.g. `=COUNTIFS([Status]:[Status], "Done")`.
 
 ## CROSS-SHEET FORMULAS
 
@@ -93,6 +162,12 @@ MAX_TOOL_ROUNDS = 25
 MAX_TOOL_RESULT_CHARS = 3000
 MAX_HISTORY_MESSAGES = 40
 
+# Loop killer: if the model issues the SAME tool with the SAME arguments this
+# many times in a single turn, we stop executing it and inject a structured
+# "you're looping" message so the model breaks out of the dead end instead of
+# burning every round repeating the same failing call.
+LOOP_REPEAT_THRESHOLD = 3
+
 DESTRUCTIVE_TOOLS = {
     "delete_rows", "delete_sheet", "delete_column", "delete_share",
     "delete_webhook", "update_rows", "add_rows", "move_rows",
@@ -133,6 +208,23 @@ def _fmt_sheets(all_sheets: list[dict], current_id: str) -> str:
     return ", ".join(names) + more
 
 
+def _new_metrics() -> dict[str, int]:
+    """Cumulative agent reliability counters exposed in /api/usage. Each
+    counter increments every time a safety net or recovery path activates.
+    Useful both as in-product debugging signal and as proof the harness is
+    actually working in production traffic."""
+    return {
+        "tool_calls": 0,
+        "tool_errors": 0,
+        "loop_blocked": 0,
+        "schema_guard_triggered": 0,
+        "parse_errors": 0,
+        "user_rejections": 0,
+        "rounds_exhausted": 0,
+        "turns": 0,
+    }
+
+
 class Agent:
     def __init__(self, llm: LLMRouter, smartsheet: SmartsheetClient, sheet_id: str = "", sheet_context: dict | None = None):
         self.llm = llm
@@ -140,6 +232,7 @@ class Agent:
         self.sheet_id = sheet_id
         self.sheet_context = sheet_context or {}
         self.pinned_sheets: list[dict] = []
+        self.metrics: dict[str, int] = _new_metrics()
 
     def _build_system_prompt(self) -> str:
         summary = self.sheet_context.get("summary", {})
@@ -197,7 +290,24 @@ class Agent:
             return result
         return result[:MAX_TOOL_RESULT_CHARS] + "\n\n... [truncated — full result was " + str(len(result)) + " chars]"
 
+    @staticmethod
+    def _call_signature(name: str, args) -> str:
+        """A stable hash key for a tool call: name + canonical JSON of args.
+        Two tool_calls with the same name and equivalent args (regardless of
+        key order) get the same signature — this is what powers the loop
+        killer."""
+        try:
+            payload = json.dumps(args, sort_keys=True, default=str, ensure_ascii=False)
+        except (TypeError, ValueError):
+            payload = str(args)
+        return f"{name}::{payload}"
+
     async def run(self, messages: list[dict], on_event=None, confirm_callback=None):
+        # Defensive: if Agent was instantiated via Agent.__new__ (e.g. in tests
+        # bypassing __init__), make sure the metrics dict exists.
+        if not hasattr(self, "metrics") or self.metrics is None:
+            self.metrics = _new_metrics()
+        self.metrics["turns"] += 1
         system = self._build_system_prompt()
 
         # Tool subsetting: classify the latest user message once, then keep
@@ -212,6 +322,9 @@ class Agent:
         tools_subset = select_tools_for_message(last_user_msg)
         log.debug("Tool subset: %d/%d tools selected for intent",
                   len(tools_subset), len(TOOL_DEFINITIONS))
+
+        # Loop killer state: count identical tool calls within this turn.
+        seen_signatures: dict[str, int] = {}
 
         for _round in range(MAX_TOOL_ROUNDS):
             full_content = ""
@@ -249,8 +362,17 @@ class Agent:
 
                 # Recover gracefully from LLM emitting malformed JSON arguments
                 if isinstance(tc["arguments"], dict) and tc["arguments"].get("__parse_error__"):
+                    self.metrics["parse_errors"] += 1
                     err = tc["arguments"]["__parse_error__"]
                     raw = tc["arguments"].get("__raw__", "")
+                    if on_event:
+                        await on_event({
+                            "type": "agent_hint",
+                            "level": "warn",
+                            "code": "PARSE_ERROR",
+                            "tool": tc["name"],
+                            "message": "The model produced invalid JSON for the tool call — asking it to retry.",
+                        })
                     messages.append({
                         "role": "tool_result",
                         "tool_call_id": tc["id"],
@@ -267,6 +389,15 @@ class Agent:
                 if confirm_callback and tc["name"] in DESTRUCTIVE_TOOLS:
                     approved = await confirm_callback(tc["name"], tc["arguments"], tc["id"])
                     if not approved:
+                        self.metrics["user_rejections"] += 1
+                        if on_event:
+                            await on_event({
+                                "type": "agent_hint",
+                                "level": "info",
+                                "code": "USER_REJECTION",
+                                "tool": tc["name"],
+                                "message": "You rejected this destructive action — the agent will reconsider.",
+                            })
                         messages.append({
                             "role": "tool_result",
                             "tool_call_id": tc["id"],
@@ -276,7 +407,78 @@ class Agent:
                             await on_event({"type": "tool_result", "name": tc["name"], "result": "Action rejected by user."})
                         continue
 
+                # Loop killer: detect identical-call repetition within this turn.
+                signature = self._call_signature(tc["name"], tc["arguments"])
+                seen_signatures[signature] = seen_signatures.get(signature, 0) + 1
+                if seen_signatures[signature] > LOOP_REPEAT_THRESHOLD:
+                    self.metrics["loop_blocked"] += 1
+                    repeat_count = seen_signatures[signature]
+                    if on_event:
+                        await on_event({
+                            "type": "agent_hint",
+                            "level": "warn",
+                            "code": "LOOP_BLOCKED",
+                            "tool": tc["name"],
+                            "message": (
+                                f"The agent tried '{tc['name']}' with the same arguments {repeat_count}× — "
+                                "the loop killer stopped it and asked the model to change strategy."
+                            ),
+                        })
+                    messages.append({
+                        "role": "tool_result",
+                        "tool_call_id": tc["id"],
+                        "content": json.dumps({
+                            "error": "REPEATED_CALL",
+                            "tool": tc["name"],
+                            "repeat_count": repeat_count,
+                            "message": (
+                                f"You have already called '{tc['name']}' with these exact arguments "
+                                f"{repeat_count} times this turn — and it keeps producing the same result. "
+                                "STOP repeating it. Choose ONE of: "
+                                "(a) call a DIFFERENT tool, "
+                                "(b) call the same tool with DIFFERENT arguments (fix what was wrong), "
+                                "(c) ask the user a clarifying question. "
+                                "Do NOT issue this exact call again."
+                            ),
+                        }),
+                    })
+                    if on_event:
+                        await on_event({
+                            "type": "tool_result",
+                            "name": tc["name"],
+                            "result": f"⚠ Loop detected — same call attempted {repeat_count}× this turn. Asking model to change approach.",
+                        })
+                    continue
+
                 result = await execute_tool(self.smartsheet, tc["name"], tc["arguments"])
+                self.metrics["tool_calls"] += 1
+
+                # Inspect the result to update reliability counters: every
+                # safety-net activation surfaces a structured `error` field
+                # that we can recognise.
+                try:
+                    _parsed = json.loads(result)
+                except (json.JSONDecodeError, TypeError):
+                    _parsed = None
+                if isinstance(_parsed, dict):
+                    err_code = _parsed.get("error")
+                    if err_code:
+                        self.metrics["tool_errors"] += 1
+                        if err_code == "UNKNOWN_COLUMNS":
+                            self.metrics["schema_guard_triggered"] += 1
+                            if on_event:
+                                unknown = _parsed.get("unknown_columns", [])
+                                await on_event({
+                                    "type": "agent_hint",
+                                    "level": "warn",
+                                    "code": "SCHEMA_GUARD",
+                                    "tool": tc["name"],
+                                    "message": (
+                                        f"Schema-guard blocked '{tc['name']}' — the model referenced "
+                                        f"columns that don't exist on the sheet ({', '.join(unknown) or 'unknown'}). "
+                                        "It will retry with the valid column names."
+                                    ),
+                                })
 
                 if on_event:
                     try:
@@ -303,6 +505,7 @@ class Agent:
                     "content": self._truncate_result(result),
                 })
 
+        self.metrics["rounds_exhausted"] += 1
         final = "I've reached the maximum number of tool calls. Please continue with a follow-up message."
         if on_event:
             await on_event({"type": "response", "content": final})
