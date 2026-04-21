@@ -337,6 +337,20 @@
     color: var(--text-muted);
     margin-bottom: 28px;
     animation: fadeInUp 0.6s ease-out 0.4s both;
+    display: inline-flex; align-items: center; gap: 12px;
+  }
+  .whats-new-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10.5px; font-weight: 800; letter-spacing: 1.5px;
+    padding: 4px 10px; border-radius: 999px;
+    background: linear-gradient(135deg, rgba(96,165,250,0.18), rgba(139,92,246,0.22));
+    color: #93C5FD;
+    border: 1px solid rgba(96,165,250,0.35);
+    text-transform: uppercase;
+  }
+  .whats-new-pill::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: #34D399; box-shadow: 0 0 0 3px rgba(52,211,153,0.18);
   }
 
   .features-grid {
@@ -2386,6 +2400,24 @@
   .bug-btn--primary:hover { background: var(--accent-light); border-color: var(--accent-light); }
   .bug-btn--primary:disabled { opacity: 0.6; cursor: progress; }
   .bug-btn--ghost { background: transparent; }
+  .bug-modal-cover {
+    position: relative;
+    height: 84px;
+    margin: -28px -32px 16px;
+    background: #050a18 center/cover no-repeat;
+    border-bottom: 1px solid var(--glass-border);
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .bug-modal-cover::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      rgba(6,11,24,0.0) 0%,
+      rgba(6,11,24,0.55) 65%,
+      rgba(6,11,24,0.95) 100%);
+    pointer-events: none;
+  }
   .bug-feedback {
     margin-top: 10px; font-size: 12px; min-height: 16px;
   }
@@ -2399,8 +2431,22 @@
     padding: 0; overflow: hidden;
     display: flex; flex-direction: column;
   }
+  .help-modal-cover {
+    position: relative; height: 110px;
+    background: #050a18 center/cover no-repeat;
+    border-bottom: 1px solid var(--glass-border);
+    overflow: hidden;
+  }
+  .help-modal-cover::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      rgba(6,11,24,0.0) 0%,
+      rgba(6,11,24,0.35) 60%,
+      rgba(6,11,24,0.85) 100%);
+    pointer-events: none;
+  }
   .help-modal-head {
-    padding: 18px 24px 14px; border-bottom: 1px solid var(--glass-border);
+    padding: 14px 24px 14px; border-bottom: 1px solid var(--glass-border);
     background: linear-gradient(180deg, rgba(96,165,250,0.06), transparent);
   }
   .help-modal-title-row {
@@ -3278,7 +3324,7 @@
       <!-- ── Stats Banner ── -->
       <section class="stats-banner">
         <div class="stat-item">
-          <div class="stat-number">53</div>
+          <div class="stat-number">73</div>
           <div class="stat-label">API Tools</div>
         </div>
         <div class="stat-divider"></div>
@@ -3293,8 +3339,8 @@
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <div class="stat-number">&infin;</div>
-          <div class="stat-label">Possibilities</div>
+          <div class="stat-number">440</div>
+          <div class="stat-label">Green Tests</div>
         </div>
       </section>
 
@@ -3346,6 +3392,37 @@
               </div>
               <h3>Conversation History</h3>
               <p>Every conversation is saved locally. Switch between past sessions, export to Markdown, and pick up right where you left off.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── What's New (April 2026) ── -->
+      <section class="features whats-new">
+        <div class="features-label">
+          <span class="whats-new-pill">New · April 2026</span>
+          What shipped this month
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <img src="/static/assets/feature-cross-sheet.png" alt="Cross-sheet data flowing between two sheets">
+            <div class="feature-card-body">
+              <h3>Cross-sheet, fluently</h3>
+              <p>Ask the agent to pull values from another sheet — VLOOKUP, INDEX/COLLECT, JOIN, MAX(COLLECT). The agent now ships a 4-step workflow and 38 live formula tests so it gets it right the first time.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <img src="/static/assets/feature-help-library.png" alt="In-app prompts library">
+            <div class="feature-card-body">
+              <h3>Prompts library &amp; Help</h3>
+              <p>A built-in catalogue of copy-paste recipes — searchable, categorised, with difficulty &amp; risk badges. Open from the header (Ctrl+Shift+L) or browse the dedicated <a href="/help" style="color:var(--accent-light);">/help</a> page.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <img src="/static/assets/feature-bug-reports.png" alt="In-app bug reports box">
+            <div class="feature-card-body">
+              <h3>One-click bug reports</h3>
+              <p>Spot something off? The bug box (Ctrl+Shift+B) auto-attaches the current sheet, last messages, and agent metrics — so reports become actionable without ping-pong. Persisted to SQLite + JSONL.</p>
             </div>
           </div>
         </div>
@@ -3856,10 +3933,11 @@
 
 <!-- ═══════ Bug Report Modal ═══════ -->
 <div class="modal-overlay hidden" id="bug-report-modal" role="dialog" aria-modal="true" aria-labelledby="bug-report-title" onclick="if(event.target===this)closeBugReportModal()">
-  <div class="modal-box bug-modal" style="position:relative; max-width:560px;">
-    <button class="modal-close" onclick="closeBugReportModal()" aria-label="Close bug report">
+  <div class="modal-box bug-modal" style="position:relative; max-width:560px; overflow:hidden;">
+    <button class="modal-close" onclick="closeBugReportModal()" aria-label="Close bug report" style="z-index:2;">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
+    <div class="bug-modal-cover" style="background-image:url('/static/assets/feature-bug-reports.png'); background-position: center 35%;" aria-hidden="true"></div>
     <h3 id="bug-report-title">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect x="8" y="6" width="8" height="14" rx="4"/>
@@ -3917,9 +3995,10 @@
 <!-- ═══════ Help / Prompts library Modal ═══════ -->
 <div class="modal-overlay hidden" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" onclick="if(event.target===this)closeHelpModal()">
   <div class="modal-box help-modal" style="position:relative;">
-    <button class="modal-close" onclick="closeHelpModal()" aria-label="Close help">
+    <button class="modal-close" onclick="closeHelpModal()" aria-label="Close help" style="z-index:2;">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
+    <div class="help-modal-cover" style="background-image:url('/static/assets/feature-help-library.png');" aria-hidden="true"></div>
     <div class="help-modal-head">
       <div class="help-modal-title-row">
         <h3 id="help-modal-title" class="help-modal-title">
