@@ -12,7 +12,7 @@
 
 <a href="https://github.com/Abdeltoto"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=800&size=28&duration=4000&pause=999999&color=58A6FF&center=true&vCenter=true&repeat=false&width=500&lines=Created+by+Abdel+ATIA" alt="Created by Abdel ATIA" /></a>
 <br />
-<a href="https://github.com/Abdeltoto"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=500&size=18&duration=3500&pause=1500&color=8B949E&center=true&vCenter=true&width=620&lines=Smartsheet+Lover+%26+Power+User+since+2013;Building+the+future+of+sheet+management;Your+sheets+have+ears+now.+%F0%9F%8E%A7;73+tools.+7+LLMs.+433+green+tests.+%F0%9F%9A%80;Cross-sheet+lookups+done+right.;81+prompts+in+13+categories+%E2%80%94+Ctrl%2BShift%2BL;Logout+%2B+full-page+Help+now+one+click+away;One-click+bug+reports.+%F0%9F%90%9B" alt="Smartsheet Lover & Power User since 2013" /></a>
+<a href="https://github.com/Abdeltoto"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=500&size=18&duration=3500&pause=1500&color=8B949E&center=true&vCenter=true&width=620&lines=Smartsheet+Lover+%26+Power+User+since+2013;Building+the+future+of+sheet+management;Your+sheets+have+ears+now.+%F0%9F%8E%A7;73+tools.+7+LLMs.+445+green+tests.+%F0%9F%9A%80;Cross-sheet+lookups+done+right.;81+prompts+in+13+categories+%E2%80%94+Ctrl%2BShift%2BL;Logout+%2B+full-page+Help+now+one+click+away;One-click+bug+reports.+%F0%9F%90%9B" alt="Smartsheet Lover & Power User since 2013" /></a>
 <br />
 [![GitHub](https://img.shields.io/badge/Abdeltoto-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/Abdeltoto)
 
@@ -28,12 +28,12 @@
 [![Anthropic](https://img.shields.io/badge/Anthropic-Claude-D4A373?style=for-the-badge&logo=anthropic&logoColor=white)](https://anthropic.com)
 [![+5 LLMs](https://img.shields.io/badge/+5-Google%20·%20OpenRouter%20·%20Mistral%20·%20Groq%20·%20DeepSeek-FF6B6B?style=for-the-badge)](#-bring-your-own-model)
 [![MCP](https://img.shields.io/badge/MCP-Protocol-8B5CF6?style=for-the-badge)](https://modelcontextprotocol.io)
-[![Tests](https://img.shields.io/badge/tests-433%20green-10B981?style=for-the-badge&logo=pytest&logoColor=white)](#running-the-test-suite)
+[![Tests](https://img.shields.io/badge/tests-445%20green-10B981?style=for-the-badge&logo=pytest&logoColor=white)](#running-the-test-suite)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 <br />
 
-**73 Smartsheet tools · 80 formulas · 7 LLM providers · 433 green tests · 81 in-app prompts · Full voice control · One conversation.**
+**73 Smartsheet tools · 80 formulas · 7 LLM providers · 445 green tests · 81 in-app prompts · Full voice control · One conversation.**
 
 A community-built AI agent that *speaks the Smartsheet API fluently* — built for developers and power-users.
 Read, write, analyze, automate, share, and visualize — by just asking.
@@ -898,17 +898,17 @@ gate, JSONL mirror, status transitions).
 
 <div align="center">
 
-<img src="frontend/assets/feature-robustness.png" alt="433 green tests across unit, integration and e2e" width="820" />
+<img src="frontend/assets/feature-robustness.png" alt="445 green tests across unit, integration and e2e" width="820" />
 
-<sub><i>433 tests · 3 layers · 0 leaks · ~4 min on a laptop.</i></sub>
+<sub><i>445 tests · 3 layers · 0 leaks · ~4 min on a laptop.</i></sub>
 
 </div>
 
 ```bash
 pip install -r requirements-dev.txt
 
-pytest                       # everything (433 tests, ~4 min)
-pytest tests/unit            # 377 fast tests, <2s, no network
+pytest                       # everything (445 tests, ~4 min)
+pytest tests/unit            # 389 fast tests, <2s, no network
 pytest tests/integration     # 41 real Smartsheet API tests
 pytest tests/e2e             # 15 WebSocket end-to-end (stubbed LLM, no cost)
 
@@ -917,7 +917,7 @@ pytest --cov=backend --cov-report=html   # coverage report → htmlcov/
 
 | Layer | Count | Speed | Network | Notable coverage |
 |---|---|---|---|---|
-| `unit` | **377** | < 3 s | none | Rate limiter · LLM router · `_friendly_error` (no secrets leaked) · **dispatch contract for all 73 tools** · **agent.run() loop** (confirm, parse-error recovery, `MAX_TOOL_ROUNDS`, image/chart events) · SQLite CRUD · MCP smoke (52 tools registered) · **Loop killer + Schema-guard + Intent subsetting** (107 P3 reliability tests) · **Cross-sheet intent subsetting (16 phrasings)** · **Bug reports CRUD + JSONL mirror (25 tests)** · **Prompts library JSON contract + endpoint (13 tests, incl. dynamic per-category validation + destructive-prompt confirmation guardrail across all 81 prompts)** |
+| `unit` | **389** | < 3 s | none | Rate limiter · LLM router · `_friendly_error` (no secrets leaked) · **dispatch contract for all 73 tools** · **agent.run() loop** (confirm, parse-error recovery, `MAX_TOOL_ROUNDS`, image/chart events) · SQLite CRUD · MCP smoke (52 tools registered) · **Loop killer + Schema-guard + Intent subsetting** (107 P3 reliability tests) · **Cross-sheet intent subsetting (16 phrasings)** · **Bug reports CRUD + JSONL mirror (25 tests)** · **Prompts library JSON contract + endpoint (13 tests, incl. dynamic per-category validation + destructive-prompt confirmation guardrail across all 81 prompts)** · **`_build_welcome` resilience (12 tests covering `None` row/column counts and threshold boundaries)** |
 | `integration` | **41** | medium | Smartsheet | Real read calls + create→modify→delete lifecycle on a throwaway sheet · **all FastAPI routes** including `/api/csv-to-sheet`, `/api/smartsheet-webhook` (challenge + payload fan-out), favorites, conversations CRUD, audit, RGPD export, model switching |
 | `e2e` | **15** | medium | Smartsheet | Full FastAPI lifespan · WebSocket handshake · agent loop with stubbed LLM · suggestions extraction · **mid-stream cancel** · **destructive-tool confirm/reject** · **WS rate-limit response** · multi-turn in one connection · **scripted-LLM safety-net scenarios** (6 tests verifying the harness intercepts column/row confusion, infinite loops, schema violations) |
 | `functional` (live) | **38** | slow | Smartsheet | Cross-sheet formulas: aggregation (SUM/AVG/COUNT), conditional aggregation (SUMIFS, COUNTIFS, MAX/MIN(COLLECT)), lookups (VLOOKUP, INDEX/MATCH, INDEX/COLLECT), date ops, JOIN — with 404-retry logic to survive Smartsheet's eventual-consistency window |
@@ -1047,7 +1047,7 @@ server {
 
 ### `Talk to Your Smartsheet.`
 
-**73 tools · 80 formulas · 7 LLMs · 433 green tests · 81 in-app prompts · Full voice · Streaming · History · Audit · MCP · Bug reports · One-click logout.**
+**73 tools · 80 formulas · 7 LLMs · 445 green tests · 81 in-app prompts · Full voice · Streaming · History · Audit · MCP · Bug reports · One-click logout.**
 
 *Your data listens. Your sheets respond. Your workflow accelerates.*
 

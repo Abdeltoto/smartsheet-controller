@@ -454,13 +454,12 @@ def _smart_starter_cards(summary: dict) -> list[dict]:
 
 def _build_welcome(summary: dict) -> dict:
     name = summary.get("name", "Unknown")
-    cols = summary.get("columnCount", 0)
-    rows = summary.get("totalRowCount", 0)
+    cols = summary.get("columnCount") or 0
+    rows = summary.get("totalRowCount") or 0
     col_names = [c["title"] for c in summary.get("columns", [])[:8]]
     col_str = ", ".join(f"`{c}`" for c in col_names)
     more = f" +{len(summary.get('columns', [])) - 8} more" if len(summary.get("columns", [])) > 8 else ""
 
-    # Quick health hints derived from structure
     hints = []
     if rows == 0:
         hints.append("\u26A0\uFE0F The sheet is currently empty.")
