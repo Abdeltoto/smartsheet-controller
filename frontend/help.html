@@ -41,6 +41,28 @@
   a { color: var(--accent-light); text-decoration: none; }
   a:hover { color: #93C5FD; }
 
+  /* ── Global scrollbar — slim, gradient, accent-coloured ── */
+  html { scrollbar-width: thin; scrollbar-color: rgba(139,92,246,0.55) transparent; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(139,92,246,0.55), rgba(34,211,238,0.45));
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(139,92,246,0.85), rgba(34,211,238,0.75));
+    background-clip: padding-box;
+    box-shadow: inset 0 0 6px rgba(139,92,246,0.35);
+  }
+  *::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, rgba(139,92,246,1), rgba(34,211,238,0.95));
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-corner { background: transparent; }
+
   /* ── Header ── */
   header.help-header {
     position: sticky; top: 0; z-index: 50;
