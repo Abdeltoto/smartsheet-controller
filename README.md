@@ -12,7 +12,7 @@
 
 <a href="https://github.com/Abdeltoto"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=800&size=28&duration=4000&pause=999999&color=58A6FF&center=true&vCenter=true&repeat=false&width=500&lines=Created+by+Abdel+ATIA" alt="Created by Abdel ATIA" /></a>
 <br />
-<a href="https://github.com/Abdeltoto"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=500&size=18&duration=3500&pause=1500&color=8B949E&center=true&vCenter=true&width=620&lines=Smartsheet+Lover+%26+Power+User+since+2013;Building+the+future+of+sheet+management;Your+sheets+have+ears+now.+%F0%9F%8E%A7;73+tools.+7+LLMs.+440+green+tests.+%F0%9F%9A%80;Cross-sheet+lookups+done+right.;In-app+prompts+library+%E2%80%94+Ctrl%2BShift%2BL;One-click+bug+reports.+%F0%9F%90%9B" alt="Smartsheet Lover & Power User since 2013" /></a>
+<a href="https://github.com/Abdeltoto"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=500&size=18&duration=3500&pause=1500&color=8B949E&center=true&vCenter=true&width=620&lines=Smartsheet+Lover+%26+Power+User+since+2013;Building+the+future+of+sheet+management;Your+sheets+have+ears+now.+%F0%9F%8E%A7;73+tools.+7+LLMs.+433+green+tests.+%F0%9F%9A%80;Cross-sheet+lookups+done+right.;81+prompts+in+13+categories+%E2%80%94+Ctrl%2BShift%2BL;Logout+%2B+full-page+Help+now+one+click+away;One-click+bug+reports.+%F0%9F%90%9B" alt="Smartsheet Lover & Power User since 2013" /></a>
 <br />
 [![GitHub](https://img.shields.io/badge/Abdeltoto-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/Abdeltoto)
 
@@ -28,12 +28,12 @@
 [![Anthropic](https://img.shields.io/badge/Anthropic-Claude-D4A373?style=for-the-badge&logo=anthropic&logoColor=white)](https://anthropic.com)
 [![+5 LLMs](https://img.shields.io/badge/+5-Google%20·%20OpenRouter%20·%20Mistral%20·%20Groq%20·%20DeepSeek-FF6B6B?style=for-the-badge)](#-bring-your-own-model)
 [![MCP](https://img.shields.io/badge/MCP-Protocol-8B5CF6?style=for-the-badge)](https://modelcontextprotocol.io)
-[![Tests](https://img.shields.io/badge/tests-440%20green-10B981?style=for-the-badge&logo=pytest&logoColor=white)](#running-the-test-suite)
+[![Tests](https://img.shields.io/badge/tests-433%20green-10B981?style=for-the-badge&logo=pytest&logoColor=white)](#running-the-test-suite)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 <br />
 
-**73 Smartsheet tools · 80 formulas · 7 LLM providers · 440 green tests · Full voice control · One conversation.**
+**73 Smartsheet tools · 80 formulas · 7 LLM providers · 433 green tests · 81 in-app prompts · Full voice control · One conversation.**
 
 A community-built AI agent that *speaks the Smartsheet API fluently* — built for developers and power-users.
 Read, write, analyze, automate, share, and visualize — by just asking.
@@ -116,7 +116,7 @@ You know the drill. Open Smartsheet. Navigate. Click. Scroll. Find the right col
 <br />
 <b>Prompts library &amp; Help</b>
 <br />
-<sub>Hot-editable JSON catalogue · 28 starter prompts in 8 categories · in-app modal (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) + dedicated <code>/help</code> page.</sub>
+<sub>Hot-editable JSON catalogue · <b>81 prompts in 13 categories</b> · in-app modal (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) + dedicated <code>/help</code> page (one click from the header).</sub>
 </td>
 <td align="center" width="33%">
 <img src="frontend/assets/feature-bug-reports.png" alt="In-app bug report box" width="320" />
@@ -128,6 +128,19 @@ You know the drill. Open Smartsheet. Navigate. Click. Scroll. Find the right col
 </td>
 </tr>
 </table>
+
+<br />
+
+<div align="center">
+
+<b>Also shipped this month</b>
+
+</div>
+
+- **Header logout button** with a discreet red-hover SVG icon (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Q</kbd>) — clears the session token and reopens the connect screen in one click.
+- **Direct Help button** in the header — opens the full-screen [`/help`](http://localhost:8000/help) page in a new tab so you can keep the chat alive while scanning the catalogue.
+- **Restyled global scrollbars** — slim, gradient (violet → cyan), Firefox-aware. Same look across the chat, the modals, and the dedicated `/help` page.
+- **Prompts library expansion** — from 28 to **81 prompts** across **13 categories**, now covering hierarchy, discussions, attachments, reports & dashboards, and workspace management on top of the original 8 categories.
 
 <br />
 
@@ -245,8 +258,10 @@ The original "agent can't bring back values from another sheet" failure mode is 
 Onboarding new collaborators (or yourself, three months later) is the slowest part of any agent product. The Help section solves it:
 
 - **In-app modal** — <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> or the book button in the header. Live search, collapsible categories, per-prompt **difficulty** (easy / medium / advanced) and **risk** (safe / caution / destructive) badges, **Copy** and **Insert into chat** actions.
-- **Dedicated full-screen page** — `/help`. Sticky sidebar with category navigation and scroll-spy, ideal for screen-sharing or projecting during onboarding sessions.
-- **28 starter prompts in 8 categories** — exploration, rows, columns, cross-sheet, formulas, sharing, automations, maintenance.
+- **Dedicated full-screen page** — [`/help`](http://localhost:8000/help). Reachable in one click from the header, sticky sidebar with category navigation and scroll-spy, ideal for screen-sharing or projecting during onboarding sessions.
+- **81 curated prompts across 13 categories** — covering virtually every Smartsheet surface the agent can touch:
+  - *Exploration* · *Rows* · *Columns* · *Cross-sheet workflows* · *Formulas* · *Sharing & permissions* · *Automations* · *Maintenance & cleanup*
+  - *Hierarchy & subtasks* · *Discussions & comments* · *Attachments & proofs* · *Reports & dashboards* · *Workspaces & navigation*
 - **Hot-editable JSON** — the catalogue lives in `frontend/data/prompts.json` and is re-read on every API call, so you can edit it in production without restarting `uvicorn`. Override the path with `SMARTSHEET_PROMPTS_PATH` for deployments where you want to ship the catalogue outside the repo.
 - **Safety guardrail** — every prompt flagged `risk: destructive` is automatically validated to contain a confirmation cue (`confirm`, `preview`, `wait`). The unit tests fail otherwise. **The agent never silently executes a destructive action.**
 
@@ -883,17 +898,17 @@ gate, JSONL mirror, status transitions).
 
 <div align="center">
 
-<img src="frontend/assets/feature-robustness.png" alt="440 green tests across unit, integration and e2e" width="820" />
+<img src="frontend/assets/feature-robustness.png" alt="433 green tests across unit, integration and e2e" width="820" />
 
-<sub><i>440 tests · 3 layers · 0 leaks · ~4 min on a laptop.</i></sub>
+<sub><i>433 tests · 3 layers · 0 leaks · ~4 min on a laptop.</i></sub>
 
 </div>
 
 ```bash
 pip install -r requirements-dev.txt
 
-pytest                       # everything (440 tests, ~4 min)
-pytest tests/unit            # 384 fast tests, <2s, no network
+pytest                       # everything (433 tests, ~4 min)
+pytest tests/unit            # 377 fast tests, <2s, no network
 pytest tests/integration     # 41 real Smartsheet API tests
 pytest tests/e2e             # 15 WebSocket end-to-end (stubbed LLM, no cost)
 
@@ -902,7 +917,7 @@ pytest --cov=backend --cov-report=html   # coverage report → htmlcov/
 
 | Layer | Count | Speed | Network | Notable coverage |
 |---|---|---|---|---|
-| `unit` | **384** | < 3 s | none | Rate limiter · LLM router · `_friendly_error` (no secrets leaked) · **dispatch contract for all 73 tools** · **agent.run() loop** (confirm, parse-error recovery, `MAX_TOOL_ROUNDS`, image/chart events) · SQLite CRUD · MCP smoke (52 tools registered) · **Loop killer + Schema-guard + Intent subsetting** (107 P3 reliability tests) · **Cross-sheet intent subsetting (16 phrasings)** · **Bug reports CRUD + JSONL mirror (25 tests)** · **Prompts library JSON contract + endpoint (20 tests, incl. destructive-prompt confirmation guardrail)** |
+| `unit` | **377** | < 3 s | none | Rate limiter · LLM router · `_friendly_error` (no secrets leaked) · **dispatch contract for all 73 tools** · **agent.run() loop** (confirm, parse-error recovery, `MAX_TOOL_ROUNDS`, image/chart events) · SQLite CRUD · MCP smoke (52 tools registered) · **Loop killer + Schema-guard + Intent subsetting** (107 P3 reliability tests) · **Cross-sheet intent subsetting (16 phrasings)** · **Bug reports CRUD + JSONL mirror (25 tests)** · **Prompts library JSON contract + endpoint (13 tests, incl. dynamic per-category validation + destructive-prompt confirmation guardrail across all 81 prompts)** |
 | `integration` | **41** | medium | Smartsheet | Real read calls + create→modify→delete lifecycle on a throwaway sheet · **all FastAPI routes** including `/api/csv-to-sheet`, `/api/smartsheet-webhook` (challenge + payload fan-out), favorites, conversations CRUD, audit, RGPD export, model switching |
 | `e2e` | **15** | medium | Smartsheet | Full FastAPI lifespan · WebSocket handshake · agent loop with stubbed LLM · suggestions extraction · **mid-stream cancel** · **destructive-tool confirm/reject** · **WS rate-limit response** · multi-turn in one connection · **scripted-LLM safety-net scenarios** (6 tests verifying the harness intercepts column/row confusion, infinite loops, schema violations) |
 | `functional` (live) | **38** | slow | Smartsheet | Cross-sheet formulas: aggregation (SUM/AVG/COUNT), conditional aggregation (SUMIFS, COUNTIFS, MAX/MIN(COLLECT)), lookups (VLOOKUP, INDEX/MATCH, INDEX/COLLECT), date ops, JOIN — with 404-retry logic to survive Smartsheet's eventual-consistency window |
@@ -1032,7 +1047,7 @@ server {
 
 ### `Talk to Your Smartsheet.`
 
-**73 tools · 80 formulas · 7 LLMs · 440 green tests · Full voice · Streaming · History · Audit · MCP · Bug reports · Prompts library.**
+**73 tools · 80 formulas · 7 LLMs · 433 green tests · 81 in-app prompts · Full voice · Streaming · History · Audit · MCP · Bug reports · One-click logout.**
 
 *Your data listens. Your sheets respond. Your workflow accelerates.*
 
