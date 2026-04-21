@@ -35,6 +35,9 @@ VALID_RISKS = {"safe", "caution", "destructive"}
 ALLOWED_ICONS = {
     "search", "rows", "columns", "link", "sigma",
     "users", "bolt", "wrench",
+    # New in v2 (April 2026): hierarchy, discussions, attachments,
+    # reports/dashboards, workspace categories.
+    "tree", "chat", "paperclip", "chart", "folder",
 }
 REQUIRED_PROMPT_KEYS = {"id", "title", "prompt"}
 
@@ -73,19 +76,28 @@ class TestCatalogueShape:
 
 
 class TestCategoryShape:
-    @pytest.mark.parametrize("idx", range(8))
-    def test_each_category_has_required_fields(self, catalogue, idx):
-        if idx >= len(catalogue["categories"]):
-            pytest.skip("fewer categories than expected slots — extra slots are ok")
-        cat = catalogue["categories"][idx]
-        assert isinstance(cat.get("title"), str) and cat["title"].strip()
-        assert isinstance(cat.get("description"), str)
-        assert cat.get("icon") in ALLOWED_ICONS, (
-            f"category '{cat.get('id')}' uses unknown icon '{cat.get('icon')}'. "
-            f"Add it to the icon map in help.html and index.html if you really "
-            f"need a new one."
+    def test_each_category_has_required_fields(self, catalogue):
+        # Validate every category dynamically — the catalogue grows
+        # over time and we never want a new category to silently bypass
+        # the contract checks.
+        problems = []
+        for cat in catalogue["categories"]:
+            cid = cat.get("id", "?")
+            if not (isinstance(cat.get("title"), str) and cat["title"].strip()):
+                problems.append(f"[{cid}] empty/missing title")
+            if not isinstance(cat.get("description"), str):
+                problems.append(f"[{cid}] description must be a string")
+            if cat.get("icon") not in ALLOWED_ICONS:
+                problems.append(
+                    f"[{cid}] unknown icon '{cat.get('icon')}'. "
+                    f"Add it to the icon map in help.html and index.html "
+                    f"and to ALLOWED_ICONS in this test."
+                )
+            if not (isinstance(cat.get("prompts"), list) and len(cat["prompts"]) >= 1):
+                problems.append(f"[{cid}] must contain at least one prompt")
+        assert not problems, "Category contract violations:\n" + "\n".join(
+            f"  - {msg}" for msg in problems
         )
-        assert isinstance(cat.get("prompts"), list) and len(cat["prompts"]) >= 1
 
 
 class TestPromptShape:

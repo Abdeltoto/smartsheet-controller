@@ -1,7 +1,7 @@
 {
-  "version": 1,
-  "updated_at": "2026-04-20",
-  "intro": "Copy any prompt below into the chat — or click 'Insert' to drop it into the input. Tweak the placeholders in <angle brackets> to match your sheet, then send.",
+  "version": 2,
+  "updated_at": "2026-04-08",
+  "intro": "Copy any prompt below into the chat — or click 'Insert' to drop it into the input. Tweak the placeholders in <angle brackets> to match your sheet, then send. Tip: combine prompts from different categories for richer workflows.",
   "legend": {
     "difficulty": {
       "easy": "Single tool call, no setup needed.",
@@ -56,6 +56,51 @@
           "risk": "safe",
           "tags": ["read-only", "analytics"],
           "prompt": "Group the rows by the column <Status> and tell me, for each value: how many rows it has, and the sum of the column <Quantity>. Format the answer as a Markdown table."
+        },
+        {
+          "id": "explore-text-search",
+          "title": "Full-text search across the sheet",
+          "description": "Find every row containing a specific phrase, anywhere.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "search"],
+          "prompt": "Search this sheet for the text '<keyword>'. List every row that contains it (any column), with the row number, the matching column, and the surrounding cell value. Cap the result at 50 hits."
+        },
+        {
+          "id": "explore-numeric-stats",
+          "title": "Descriptive stats on a numeric column",
+          "description": "Min / max / mean / median / sum on one column.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "analytics"],
+          "prompt": "On the column <Amount>, compute and show: count of non-empty values, min, max, mean (rounded to 2 decimals), median, sum. Skip empty cells. Format as a small Markdown table."
+        },
+        {
+          "id": "explore-top-n",
+          "title": "Top N rows by a column",
+          "description": "Find the highest (or lowest) values without writing a formula.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "analytics"],
+          "prompt": "Show me the <10> rows with the highest <Amount> in this sheet. For each, include the row number and the columns <Customer> and <Date>. Sort descending by <Amount>."
+        },
+        {
+          "id": "explore-cell-history",
+          "title": "Audit trail of a single cell",
+          "description": "Who changed what, when, on a specific cell.",
+          "difficulty": "medium",
+          "risk": "safe",
+          "tags": ["read-only", "audit", "history"],
+          "prompt": "Pull the cell history for the column <Status> on row <row_number>. Show every revision: timestamp, author, previous value, new value. Format as a chronological Markdown table."
+        },
+        {
+          "id": "explore-recent-items",
+          "title": "What did I touch recently?",
+          "description": "List the sheets / reports the connected user opened last.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "navigation"],
+          "prompt": "List the items I (the connected user) have accessed most recently across my Smartsheet account. For each: name, type (sheet/report/dashboard), workspace, and last-accessed date if available."
         }
       ]
     },
@@ -63,7 +108,7 @@
       "id": "rows",
       "title": "Rows — data manipulation",
       "icon": "rows",
-      "description": "Add, update, move, and delete rows. The agent will ask for confirmation before each write.",
+      "description": "Add, update, move, copy, delete rows. The agent will ask for confirmation before each write.",
       "prompts": [
         {
           "id": "rows-add-one",
@@ -100,6 +145,51 @@
           "risk": "destructive",
           "tags": ["delete", "preview"],
           "prompt": "I want to delete every row where the column <Status> = 'Cancelled'. Don't delete anything yet — just list the row numbers, the values of <Task> and <Owner>, and the total count. I'll confirm explicitly."
+        },
+        {
+          "id": "rows-move-to-position",
+          "title": "Reorder a row",
+          "description": "Move a row to a new position (top, bottom, before/after another row).",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "reorder"],
+          "prompt": "Move the row whose <Task> = '<task name>' to the top of the sheet. Confirm what you are about to do before applying."
+        },
+        {
+          "id": "rows-copy-to-other-sheet",
+          "title": "Copy rows to another sheet",
+          "description": "Duplicate rows into a target sheet (the source rows stay).",
+          "difficulty": "advanced",
+          "risk": "caution",
+          "tags": ["write", "cross-sheet", "copy"],
+          "prompt": "Copy every row where <Status> = 'Done' into the sheet '<target sheet>' (id=<target_sheet_id>). Preserve cell values; do NOT delete the source rows. List the count and the first 5 row numbers before applying, then wait for my confirmation."
+        },
+        {
+          "id": "rows-sort-sheet",
+          "title": "Sort the sheet by a column",
+          "description": "Persistent server-side sort (saved on the sheet itself).",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "sort"],
+          "prompt": "Sort this sheet by <Due Date> ascending, then by <Priority> descending. Confirm the sort spec before applying."
+        },
+        {
+          "id": "rows-cell-link",
+          "title": "Live link a cell to another sheet",
+          "description": "Create a Smartsheet cell-link (the value updates when the source changes).",
+          "difficulty": "advanced",
+          "risk": "caution",
+          "tags": ["write", "cross-sheet", "link"],
+          "prompt": "On row <row_number>, column <Customer Name> of THIS sheet, create a cell-link pointing to row <source_row_number>, column <Customer Name> of sheet '<source sheet>' (id=<source_sheet_id>). Confirm both endpoints before creating the link."
+        },
+        {
+          "id": "rows-add-comment",
+          "title": "Add a comment to a row",
+          "description": "Drop a discussion message on a specific row (visible to collaborators).",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "comment"],
+          "prompt": "Add the comment '<your message>' on row <row_number>. Show me the row context (key columns) before posting so I'm sure it's the right one."
         }
       ]
     },
@@ -107,7 +197,7 @@
       "id": "columns",
       "title": "Columns & structure",
       "icon": "columns",
-      "description": "Add, rename, retype, or remove columns. Be careful: changing a column type can lose data.",
+      "description": "Add, rename, retype, reorder, or remove columns. Be careful: changing a column type can lose data.",
       "prompts": [
         {
           "id": "columns-add-text",
@@ -128,6 +218,15 @@
           "prompt": "Add a new PICKLIST column titled 'Priority' with the options: Low, Medium, High, Critical. Place it right after the <Status> column. Do not enable multi-select."
         },
         {
+          "id": "columns-add-multipicklist",
+          "title": "Add a multi-select PICKLIST column",
+          "description": "Same as PICKLIST but cells can hold several values at once.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "structure"],
+          "prompt": "Add a multi-select PICKLIST column titled 'Tags' with options: backend, frontend, infra, design, docs. Multi-select MUST be enabled. Place it at the end."
+        },
+        {
           "id": "columns-add-checkbox",
           "title": "Add a CHECKBOX column",
           "description": "Boolean flag column.",
@@ -137,6 +236,33 @@
           "prompt": "Add a CHECKBOX column titled 'Validated' at the end of the sheet."
         },
         {
+          "id": "columns-add-date",
+          "title": "Add a DATE column",
+          "description": "Pure date column (no time component).",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "structure"],
+          "prompt": "Add a DATE column titled 'Due Date' right after the column <Status>. Do not seed any default value."
+        },
+        {
+          "id": "columns-add-contact",
+          "title": "Add a CONTACT_LIST column",
+          "description": "Cell values are user contacts (with avatars).",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "structure", "people"],
+          "prompt": "Add a CONTACT_LIST column titled 'Owner' at the end of the sheet. Allow multiple contacts per cell."
+        },
+        {
+          "id": "columns-add-formula",
+          "title": "Add a column with a default formula",
+          "description": "All cells in the column will run the same formula.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["write", "structure", "formula"],
+          "prompt": "Add a TEXT_NUMBER column titled 'Days open' at the end. Set its default formula to: =IF(ISBLANK([Created Date]@row), \"\", TODAY() - [Created Date]@row). Confirm the syntax with me before creating the column."
+        },
+        {
           "id": "columns-rename",
           "title": "Rename a column",
           "description": "Pure metadata change, doesn't touch the data.",
@@ -144,6 +270,24 @@
           "risk": "caution",
           "tags": ["write", "structure"],
           "prompt": "Rename the column currently called '<old name>' to '<new name>'. Don't change its type or position."
+        },
+        {
+          "id": "columns-reorder",
+          "title": "Reorder columns",
+          "description": "Move a column to a new index.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "structure"],
+          "prompt": "Move the column '<column name>' to position <2> (zero-indexed). Show me the resulting column order before applying."
+        },
+        {
+          "id": "columns-delete",
+          "title": "Delete a column (with audit)",
+          "description": "Drops a column AND all its data — confirm twice.",
+          "difficulty": "medium",
+          "risk": "destructive",
+          "tags": ["delete", "structure"],
+          "prompt": "I want to delete the column '<column name>'. First: tell me how many non-empty cells it contains and show me 3 sample values so I'm sure I'm deleting the right one. Then ask me for explicit confirmation. Only then perform the deletion."
         }
       ]
     },
@@ -163,6 +307,15 @@
           "prompt": "I want to bring the value of the column <Customer Name> from the sheet '<source sheet name>' (id=<source_sheet_id>) into this sheet, joined on the column <Order Number>. Walk me through:\n1. Read the source sheet schema and confirm the column ids.\n2. Create the cross-sheet references you need.\n3. Build the VLOOKUP formula.\n4. Apply it on rows 1–<N> of column <Customer Name>.\n\nAsk before each write."
         },
         {
+          "id": "crosssheet-index-collect",
+          "title": "INDEX / COLLECT from another sheet (more flexible than VLOOKUP)",
+          "description": "Multi-criteria lookup that returns the first match — handles any column order.",
+          "difficulty": "advanced",
+          "risk": "caution",
+          "tags": ["cross-sheet", "formula", "lookup"],
+          "prompt": "In this sheet, in the column <Status>, write a formula using INDEX and COLLECT that returns the value of <Status> from the sheet '<source sheet>' (id=<source_sheet_id>) for the row whose <Order Number> equals the <Order Number> of the current row AND whose <Customer> equals the <Customer> of the current row.\n\nMandatory steps:\n1. Read the source schema, confirm the 3 column names.\n2. Create the cross-sheet references (one per source column).\n3. Show me the formula before applying.\n4. Apply on rows 1–<N>."
+        },
+        {
           "id": "crosssheet-bulk-transfer",
           "title": "One-shot transfer of values (no live link)",
           "description": "Copy values from a source sheet into the current sheet, in order. No formula, just static values.",
@@ -179,6 +332,24 @@
           "risk": "caution",
           "tags": ["cross-sheet", "formula", "aggregate"],
           "prompt": "In this sheet, in the column <Total Amount>, write a formula that sums the column <Amount> from the sheet '<source sheet>' (id=<source_sheet_id>) for every row whose <Status> equals the value of <Status> in this row. Create the cross-sheet refs first."
+        },
+        {
+          "id": "crosssheet-list-refs",
+          "title": "Audit existing cross-sheet references",
+          "description": "Inventory the references already defined on this sheet.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "cross-sheet", "audit"],
+          "prompt": "List every cross-sheet reference defined on this sheet. For each, show: ref name, target sheet (with id), target range (cell or full column), and where it is used (which formula / column). Format as a Markdown table."
+        },
+        {
+          "id": "crosssheet-find-unmatched",
+          "title": "Find values in this sheet missing from a source",
+          "description": "Detect rows whose join key has no match in a master sheet.",
+          "difficulty": "advanced",
+          "risk": "safe",
+          "tags": ["read-only", "cross-sheet", "quality"],
+          "prompt": "I want to find rows in THIS sheet whose <Order Number> does NOT exist in the sheet '<master sheet>' (id=<master_sheet_id>). For each unmatched row, list: row number, <Order Number>, <Customer>. Don't write anything to the sheet — just report. You may build a temporary IFERROR(MATCH(...)) check if needed, then revert it after the audit."
         }
       ]
     },
@@ -223,6 +394,113 @@
           "risk": "caution",
           "tags": ["formula", "date"],
           "prompt": "In the column <Age (days)>, write a formula that returns TODAY() - <Created Date> (rounded to an integer). Skip rows where <Created Date> is empty."
+        },
+        {
+          "id": "formulas-text-extract",
+          "title": "Extract a substring (LEFT / RIGHT / MID / FIND)",
+          "description": "Pull part of a text value into its own column.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["formula", "text"],
+          "prompt": "In the column <Domain>, write a formula that extracts the domain part of the column <Email> (everything after '@'). Use FIND and MID. If <Email> is empty, return an empty string. Apply on every existing row."
+        },
+        {
+          "id": "formulas-iferror",
+          "title": "Wrap a fragile formula with IFERROR",
+          "description": "Replace #INVALID / #DIVIDE BY ZERO / #NO MATCH with a clean fallback.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["formula", "robustness"],
+          "prompt": "In the column <Margin>, the formula =[Revenue]@row / [Cost]@row produces #DIVIDE BY ZERO when Cost is 0. Rewrite it as IFERROR(..., 0) so the result is 0 instead of an error. Apply to every row already having a value."
+        },
+        {
+          "id": "formulas-workdays",
+          "title": "Business-days delta (NETWORKDAYS)",
+          "description": "Count working days between two dates, ignoring weekends.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["formula", "date"],
+          "prompt": "Add a TEXT_NUMBER column titled 'Working days to deadline' and write a formula =NETWORKDAYS(TODAY(), [Due Date]@row). If <Due Date> is empty, return an empty string."
+        },
+        {
+          "id": "formulas-children-sum",
+          "title": "Roll-up children to a parent row",
+          "description": "Use SUM(CHILDREN()) to aggregate child rows on a parent.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["formula", "hierarchy"],
+          "prompt": "In the column <Total>, on every parent row (row that has at least one indented child), write the formula =SUM(CHILDREN()). Tell me how many parent rows you found before applying."
+        },
+        {
+          "id": "formulas-rank",
+          "title": "Rank rows by a column",
+          "description": "RANK to compute a rank position per row.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["formula", "analytics"],
+          "prompt": "Add a TEXT_NUMBER column titled 'Rank' and fill it with =RANK([Score]@row, [Score]:[Score], 0) so that the highest score is rank 1. Apply to every row that has a value in <Score>."
+        },
+        {
+          "id": "formulas-percent-complete",
+          "title": "Weighted percent complete",
+          "description": "Combine multiple progress columns weighted by effort.",
+          "difficulty": "advanced",
+          "risk": "caution",
+          "tags": ["formula", "project"],
+          "prompt": "On the parent row <row_number>, write a formula that returns the weighted average of <% complete> across CHILDREN(), weighted by <Effort (days)>. Use SUMPRODUCT-style logic with SUM. Confirm the formula syntax against Smartsheet docs before writing it."
+        }
+      ]
+    },
+    {
+      "id": "hierarchy",
+      "title": "Hierarchy & sub-tasks",
+      "icon": "tree",
+      "description": "Smartsheet's killer feature: parent rows with indented children. Use for project plans, WBS, nested categories.",
+      "prompts": [
+        {
+          "id": "hierarchy-list-tree",
+          "title": "Print the indented structure",
+          "description": "See parents and their children as an indented tree.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "hierarchy"],
+          "prompt": "Read the first 200 rows and show the indentation tree: for each row, print '  ' × (level) + <Task>. Mark rows that have children with '▶'. Don't change anything."
+        },
+        {
+          "id": "hierarchy-find-parents",
+          "title": "Find all parent rows",
+          "description": "List rows that have at least one child.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "hierarchy"],
+          "prompt": "Identify every parent row (a row that has at least one indented child). For each, give me the row number, <Task>, and the count of direct children. Format as a Markdown table."
+        },
+        {
+          "id": "hierarchy-add-child",
+          "title": "Add a child row under a parent",
+          "description": "Insert a new row indented under an existing one.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["write", "hierarchy"],
+          "prompt": "Add a child row under the parent whose <Task> = '<parent task>'. Set <Task>='<child task>', <Owner>='<owner>'. Confirm the parent row id and the planned payload before writing."
+        },
+        {
+          "id": "hierarchy-rollup-children",
+          "title": "Roll up children sum on every parent",
+          "description": "Compute SUM(CHILDREN()) on every parent of a column.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["write", "hierarchy", "formula"],
+          "prompt": "On the column <Effort>, fill every parent row with =SUM(CHILDREN()). Leave child rows untouched. Tell me how many parent rows will be updated, then ask before applying."
+        },
+        {
+          "id": "hierarchy-find-orphans",
+          "title": "Find childless leaves (audit)",
+          "description": "Spot leaf rows that should logically have sub-tasks.",
+          "difficulty": "medium",
+          "risk": "safe",
+          "tags": ["read-only", "hierarchy", "quality"],
+          "prompt": "List every leaf row (no children) where <Type> = 'Epic' or <Type> = 'Phase'. Those probably should have sub-tasks. Just report — don't change anything."
         }
       ]
     },
@@ -230,7 +508,7 @@
       "id": "sharing",
       "title": "Sharing & permissions",
       "icon": "users",
-      "description": "Invite or remove collaborators. Always confirm with me before changing permissions.",
+      "description": "Invite or remove collaborators on the sheet (or its workspace). Always confirm with me before changing permissions.",
       "prompts": [
         {
           "id": "sharing-list",
@@ -251,6 +529,24 @@
           "prompt": "Share this sheet with <user@example.com> as EDITOR. Don't send the notification email. Confirm the action before applying."
         },
         {
+          "id": "sharing-bulk-invite",
+          "title": "Invite several users at once",
+          "description": "Bulk share with the same access level.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["write", "permissions", "batch"],
+          "prompt": "Share this sheet with the following users as VIEWER (no notification email):\n- alice@example.com\n- bob@example.com\n- carol@example.com\n\nList the planned shares and ask for confirmation before applying."
+        },
+        {
+          "id": "sharing-change-role",
+          "title": "Change a user's access level",
+          "description": "Promote / demote an existing collaborator.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "permissions"],
+          "prompt": "For <user@example.com>, change the access level on this sheet from <current level> to <new level> (one of VIEWER, EDITOR, ADMIN). Confirm the current level first."
+        },
+        {
           "id": "sharing-revoke",
           "title": "Revoke a user's access",
           "description": "Remove a collaborator from the sheet.",
@@ -265,7 +561,7 @@
       "id": "automations",
       "title": "Automations & alerts",
       "icon": "bolt",
-      "description": "Inspect, pause, or remove automation rules attached to the sheet.",
+      "description": "Inspect, pause, document, or remove automation rules attached to the sheet (notifications, update requests, approvals, locks).",
       "prompts": [
         {
           "id": "automations-list",
@@ -275,6 +571,24 @@
           "risk": "safe",
           "tags": ["read-only", "audit"],
           "prompt": "List every automation rule on this sheet. For each, give me: name, trigger type (event-based / time-based), action type (notification / update / move / approval), and whether it is enabled. Format as a Markdown table."
+        },
+        {
+          "id": "automations-inspect",
+          "title": "Inspect one automation rule in depth",
+          "description": "Get the full configuration of a rule.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "audit"],
+          "prompt": "Give me the full configuration of the automation rule named '<rule name>' on this sheet: trigger details, conditions, recipients, action details, schedule. Format as a structured Markdown block."
+        },
+        {
+          "id": "automations-document-all",
+          "title": "Document all rules in a Markdown report",
+          "description": "Build a one-page audit doc describing every rule.",
+          "difficulty": "medium",
+          "risk": "safe",
+          "tags": ["read-only", "audit", "report"],
+          "prompt": "Produce a Markdown report titled '## Automation rules on <this sheet name>' describing every rule of this sheet. For each, include: name, status (enabled/disabled), trigger, conditions, action(s), recipients. End with a small summary: total count, % enabled, most-used action type."
         },
         {
           "id": "automations-disable",
@@ -297,10 +611,186 @@
       ]
     },
     {
+      "id": "discussions",
+      "title": "Discussions & comments",
+      "icon": "chat",
+      "description": "Inspect conversation threads on a sheet, drop a comment on a row, or open a new discussion thread.",
+      "prompts": [
+        {
+          "id": "disc-list-sheet",
+          "title": "List all discussion threads on the sheet",
+          "description": "Audit every conversation attached to the sheet itself or its rows.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "audit", "comment"],
+          "prompt": "List every discussion thread on this sheet. For each: thread id, attached row (or 'sheet-level'), title/first comment, author, date, number of replies. Format as a Markdown table sorted by most recent."
+        },
+        {
+          "id": "disc-list-row",
+          "title": "Read all comments on one row",
+          "description": "See the full thread on a specific row.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "comment"],
+          "prompt": "Pull the full discussion thread on row <row_number>. Show every comment in chronological order with: timestamp, author, text. Just read — don't post anything."
+        },
+        {
+          "id": "disc-add-comment",
+          "title": "Add a comment to a row's existing thread",
+          "description": "Append a message to a row's discussion (or start one if none exists).",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "comment"],
+          "prompt": "On row <row_number>, post the comment: '<your message>'. If the row has no existing thread, create a new one. Show me the row's key columns before posting so I can confirm I'm targeting the right row."
+        },
+        {
+          "id": "disc-create-thread",
+          "title": "Open a new discussion on a row",
+          "description": "Explicitly create a new thread (e.g. for a code review or blocker).",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["write", "comment"],
+          "prompt": "Open a new discussion thread on row <row_number> with the opening message: '<message>'. Confirm the row context first (key columns), then create the thread."
+        }
+      ]
+    },
+    {
+      "id": "attachments",
+      "title": "Attachments",
+      "icon": "paperclip",
+      "description": "Inspect and manage URL attachments on the sheet or on individual rows.",
+      "prompts": [
+        {
+          "id": "att-list-sheet",
+          "title": "List all attachments on the sheet",
+          "description": "Inventory every file or URL attached to the sheet or its rows.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "audit"],
+          "prompt": "List every attachment on this sheet. For each: name, type (file / link), attached to (sheet / row #), size if file, uploaded by, uploaded at. Sort newest first. Cap at 100 results."
+        },
+        {
+          "id": "att-list-row",
+          "title": "List attachments on one row",
+          "description": "See the files / links attached to a specific row.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only"],
+          "prompt": "List the attachments on row <row_number>. For each: name, type, URL or download link, uploaded by."
+        },
+        {
+          "id": "att-attach-url",
+          "title": "Attach a URL to a row",
+          "description": "Add a clickable URL on a row (or on the sheet itself).",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write"],
+          "prompt": "Attach the URL '<https://...>' (display name '<short label>') to row <row_number>. Confirm the row's key columns before attaching."
+        },
+        {
+          "id": "att-cleanup-old",
+          "title": "Audit & remove very old attachments",
+          "description": "Find attachments older than X days and propose deletion.",
+          "difficulty": "advanced",
+          "risk": "destructive",
+          "tags": ["delete", "audit"],
+          "prompt": "List every attachment on this sheet that was uploaded more than <365> days ago. For each: name, attached to (row # or sheet), uploaded at, uploaded by. Don't delete anything yet — wait for me to pick which ones to drop. After my explicit list, delete only the chosen attachments."
+        }
+      ]
+    },
+    {
+      "id": "reports-dashboards",
+      "title": "Reports & dashboards",
+      "icon": "chart",
+      "description": "Read-only inspection of Smartsheet reports and dashboards visible to the connected user.",
+      "prompts": [
+        {
+          "id": "rd-list-reports",
+          "title": "List all reports I can see",
+          "description": "Inventory of reports across workspaces.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "audit"],
+          "prompt": "List every report I have access to. For each: name, id, workspace, last modified date. Sort by last modified desc. Cap at 50."
+        },
+        {
+          "id": "rd-inspect-report",
+          "title": "Inspect a report",
+          "description": "Read a report's columns and the first rows.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only"],
+          "prompt": "Read the report id=<report_id>. Show its columns (with types), the source sheets it aggregates, and the first 10 rows. Format the rows as a Markdown table."
+        },
+        {
+          "id": "rd-list-dashboards",
+          "title": "List all dashboards I can see",
+          "description": "Inventory of dashboards (Sights).",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "audit"],
+          "prompt": "List every dashboard (Sight) I have access to. For each: name, id, workspace, last modified date. Sort by last modified desc."
+        }
+      ]
+    },
+    {
+      "id": "workspace",
+      "title": "Workspaces, folders & sheets",
+      "icon": "folder",
+      "description": "Navigate and reorganise your Smartsheet account: list workspaces, create folders, copy / move / rename sheets.",
+      "prompts": [
+        {
+          "id": "ws-list",
+          "title": "List all my workspaces",
+          "description": "Top-level view of every workspace I can access.",
+          "difficulty": "easy",
+          "risk": "safe",
+          "tags": ["read-only", "navigation"],
+          "prompt": "List every workspace I have access to. For each: name, id, my access level. Format as a Markdown table sorted alphabetically."
+        },
+        {
+          "id": "ws-tree",
+          "title": "Print a workspace tree",
+          "description": "Show all folders, sheets, reports, dashboards inside a workspace.",
+          "difficulty": "medium",
+          "risk": "safe",
+          "tags": ["read-only", "navigation"],
+          "prompt": "For workspace id=<workspace_id>, print an indented tree showing every folder, sheet, report and dashboard inside (recurse into folders). Mark each item with its type ([sheet], [report], [dashboard], [folder])."
+        },
+        {
+          "id": "ws-create-folder",
+          "title": "Create a folder in a workspace",
+          "description": "Organise sheets by creating a folder.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "structure"],
+          "prompt": "Create a folder named '<folder name>' inside workspace id=<workspace_id>. Confirm the parent workspace name before creating."
+        },
+        {
+          "id": "ws-copy-sheet",
+          "title": "Copy a sheet to another workspace / folder",
+          "description": "Duplicate a sheet (structure + data) to a new location.",
+          "difficulty": "medium",
+          "risk": "caution",
+          "tags": ["write", "duplicate"],
+          "prompt": "Copy the sheet id=<source_sheet_id> into workspace id=<target_workspace_id> (folder id=<target_folder_id> if applicable), naming the copy '<new name>'. Include data, formulas, attachments, discussions if possible. Confirm the copy plan before executing."
+        },
+        {
+          "id": "ws-rename-sheet",
+          "title": "Rename a sheet",
+          "description": "Change the sheet's display name (no data change).",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write"],
+          "prompt": "Rename the sheet id=<sheet_id> from its current name to '<new name>'. Show me the current name first to confirm I'm targeting the right one."
+        }
+      ]
+    },
+    {
       "id": "maintenance",
       "title": "Maintenance & quality",
       "icon": "wrench",
-      "description": "Clean up, normalise, and fix data quality issues.",
+      "description": "Clean up, normalise, and fix data quality issues. Always preview before mutating.",
       "prompts": [
         {
           "id": "maintenance-trim",
@@ -319,6 +809,33 @@
           "risk": "caution",
           "tags": ["write", "clean"],
           "prompt": "List every distinct value of the column <Status> with its row count. Then propose a mapping to this canonical list: ['Not started', 'In progress', 'Blocked', 'Done', 'Cancelled']. Apply the mapping ONLY after I confirm."
+        },
+        {
+          "id": "maintenance-fill-blanks",
+          "title": "Fill blank cells with a default",
+          "description": "Set a default value on every empty cell of a column.",
+          "difficulty": "easy",
+          "risk": "caution",
+          "tags": ["write", "clean"],
+          "prompt": "On the column <Priority>, find every row where the cell is empty AND the row is not entirely empty. Set those cells to '<Medium>'. Show me the count and 5 sample row numbers before applying."
+        },
+        {
+          "id": "maintenance-dedupe",
+          "title": "Deduplicate rows on a key column",
+          "description": "Keep one row per unique key, drop the rest (with preview).",
+          "difficulty": "advanced",
+          "risk": "destructive",
+          "tags": ["delete", "clean"],
+          "prompt": "Find duplicate rows in this sheet based on the key column <Order Number>. For each duplicate group, keep the row with the most recent <Last Modified> date and delete the others. Don't delete anything yet — list the row numbers to keep vs. to drop, total counts, and ask for explicit confirmation before applying."
+        },
+        {
+          "id": "maintenance-fix-dates",
+          "title": "Detect inconsistent date formats",
+          "description": "Spot rows where a DATE column has unparseable values.",
+          "difficulty": "medium",
+          "risk": "safe",
+          "tags": ["read-only", "quality", "date"],
+          "prompt": "On the column <Date>, list every row where the value is non-empty but does not look like a valid ISO date (yyyy-mm-dd). For each, show: row number, raw value, suspected reason (text instead of date, wrong format, …). Just report — don't change anything."
         },
         {
           "id": "maintenance-archive",
