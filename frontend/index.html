@@ -2306,6 +2306,13 @@
 
   /* ═══════ Bug-report modal ═══════ */
   .header-btn--bug:hover { color: #FBBF24; }
+  a.header-btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+  .header-btn--help-page:hover { color: #67E8F9; }
+  .header-btn--logout:hover {
+    color: #F87171;
+    border-color: rgba(248,113,113,0.35);
+    background: rgba(248,113,113,0.08);
+  }
   .bug-modal-intro {
     font-size: 12.5px; color: var(--text-secondary);
     line-height: 1.5; margin: -6px 0 18px;
@@ -3246,7 +3253,7 @@
       <div class="watch-popover-hint">You'll be notified in-app whenever rows are added, removed, or modified.</div>
     </div>
 
-    <!-- Help / Prompts library -->
+    <!-- Help / Prompts library (modal) -->
     <button class="header-btn header-btn--help" id="btn-help" onclick="openHelpModal()" title="Help &amp; prompts library (Ctrl+Shift+L)" aria-label="Help and prompts library">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
@@ -3254,6 +3261,15 @@
         <path d="M9 7h7M9 11h5"/>
       </svg>
     </button>
+
+    <!-- Help / Prompts library (full page in new tab) -->
+    <a class="header-btn header-btn--help-page" id="btn-help-page" href="/help" target="_blank" rel="noopener" title="Open prompts library — full page" aria-label="Open prompts library full page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 3h7v7"/>
+        <path d="M21 3l-9 9"/>
+        <path d="M21 14v5a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h5"/>
+      </svg>
+    </a>
 
     <!-- Shortcuts help -->
     <button class="header-btn" id="btn-shortcuts" onclick="toggleShortcutsModal()" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
@@ -3278,6 +3294,15 @@
         <line x1="3" y1="6" x2="21" y2="6"/>
         <line x1="3" y1="12" x2="21" y2="12"/>
         <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
+    <!-- Disconnect / logout -->
+    <button class="header-btn header-btn--logout" id="btn-logout" onclick="disconnectSession()" title="Disconnect (Ctrl+Shift+Q)" style="display:none;" aria-label="Disconnect">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
 
@@ -3927,6 +3952,7 @@
     <div class="shortcut-row"><span class="shortcut-label">Toggle history</span><div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">H</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Report a bug</span><div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">B</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Open prompts library</span><div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">L</span></div></div>
+    <div class="shortcut-row"><span class="shortcut-label">Disconnect session</span><div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">Q</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Show shortcuts</span><div class="shortcut-keys"><span class="kbd">?</span></div></div>
   </div>
 </div>
@@ -4646,6 +4672,7 @@ function openChat(data) {
   document.getElementById('btn-shortcuts').style.display = 'flex';
   document.getElementById('btn-settings').style.display = 'flex';
   document.getElementById('btn-watch').style.display = 'flex';
+  const bl = document.getElementById('btn-logout'); if (bl) bl.style.display = 'flex';
   const burger = document.getElementById('btn-burger');
   if (burger) burger.style.display = '';
 
@@ -6606,6 +6633,12 @@ function initKeyboardShortcuts() {
         case 'H': e.preventDefault(); toggleHistory(); break;
         case 'B': e.preventDefault(); openBugReportModal(); break;
         case 'L': e.preventDefault(); openHelpModal(); break;
+        case 'Q': {
+          e.preventDefault();
+          const bl = document.getElementById('btn-logout');
+          if (bl && bl.style.display !== 'none') disconnectSession();
+          break;
+        }
       }
     }
   });
@@ -7668,6 +7701,7 @@ async function disconnectSession() {
   const ub = document.getElementById('user-badge'); if (ub) ub.style.display = 'none';
   const bs = document.getElementById('btn-settings'); if (bs) bs.style.display = 'none';
   const bw = document.getElementById('btn-watch'); if (bw) bw.style.display = 'none';
+  const blo = document.getElementById('btn-logout'); if (blo) blo.style.display = 'none';
   const bg = document.getElementById('btn-burger'); if (bg) bg.style.display = 'none';
   document.querySelector('header')?.classList.remove('mobile-menu-open');
   const wp = document.getElementById('watch-popover'); if (wp) wp.classList.add('hidden');
