@@ -35,6 +35,8 @@
 
 **73 Smartsheet tools · 80 formulas · 7 LLM providers · 445 green tests · 81 in-app prompts · Full voice control · One conversation.**
 
+**Chrome extension:** the same Controller runs in Chrome’s **side panel** beside [Smartsheet](https://app.smartsheet.com) ([details & install](#chrome-extension)).
+
 A community-built AI agent that *speaks the Smartsheet API fluently* — built for developers and power-users.
 Read, write, analyze, automate, share, and visualize — by just asking.
 **BYOT** (bring your own token) · server-side memory · audit log · real-time webhooks · MCP-ready.
@@ -45,6 +47,7 @@ Read, write, analyze, automate, share, and visualize — by just asking.
 
 [**Quick Start**](#quick-start) ·
 [What's New](#whats-new--april-2026) ·
+[Chrome extension](#chrome-extension) ·
 [The Power](#the-power) ·
 [Cross-sheet workflow](#cross-sheet-the-right-way) ·
 [Prompts library](#prompts-library--in-app-help) ·
@@ -141,11 +144,36 @@ You know the drill. Open Smartsheet. Navigate. Click. Scroll. Find the right col
 - **Header logout button** with a discreet red-hover SVG icon (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Q</kbd>) — clears the session token and reopens the connect screen in one click.
 - **Direct Help button** in the header — opens the full-screen [`/help`](http://localhost:8100/help) page in a new tab so you can keep the chat alive while scanning the catalogue.
 - **Restyled global scrollbars** — slim, gradient (violet → cyan), Firefox-aware. Same look across the chat, the modals, and the dedicated `/help` page.
-- **Prompts library expansion** — from 28 to **81 prompts** across **13 categories**, now covering hierarchy, discussions, attachments, reports & dashboards, and workspace management on top of the original 8 categories.
+- **Chrome extension (`extension/`)** — MV3 side panel beside Smartsheet, sheet ID from the URL, embed mode **`ssc_ext=1`** for a focused UI ([Chrome extension](#chrome-extension)).
 
 <br />
 
 > Want the recipes ? Open the in-app modal (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) or visit the dedicated [`/help`](http://localhost:8100/help) page once the server is running.
+
+<br />
+
+<div align="center">
+
+<img src="frontend/assets/readme-chrome-extension-banner.png" alt="Illustration: Chrome side panel beside a sheet grid with an AI chat" width="860" />
+
+<sub><i>Concept art — Manifest V3 side panel next to your sheet.</i></sub>
+
+</div>
+
+<br />
+
+## Chrome extension
+
+The web app isn’t browser-only fiction: **`extension/`** is a **Manifest V3** Chrome extension that loads your running Controller (same FastAPI backend) inside **Chrome’s side panel**, docked next to Smartsheet. The content script detects the sheet ID from `app.smartsheet.com` URLs and passes **`ssc_ext=1`** so the embedded iframe can strip extra chrome; the toolbar icon can show when a sheet page is detected.
+
+| | |
+|:---:|:---|
+| **Install** | **Load unpacked** from `chrome://extensions` (**Developer mode**) → choose the [`extension/`](extension/) folder ([step-by-step](extension/README.md)). |
+| **Hotkey** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd> — open side panel ([see extension README](extension/README.md)). |
+| **Privacy / Store** | Web Store checklist and packaging live under [`extension/store/`](extension/store/). |
+| **Trademark** | *Google Chrome* and the Chrome logo are trademarks of Google LLC. |
+
+<sub>The landing page [`frontend/index.html`](frontend/index.html) also highlights the extension using assets under [`frontend/assets/branding/`](frontend/assets/branding/).</sub>
 
 <br />
 

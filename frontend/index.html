@@ -280,38 +280,142 @@
     animation: pulse 2s ease-in-out infinite;
   }
 
-  .hero-extension-hint {
-    font-size: 13px;
+
+
+  /* ── Extension promo (Chrome · landing) ── */
+  .extension-promo {
+    max-width: 1280px;
+    margin: 0 auto 8px;
+    padding: 0 48px 28px;
+    width: 100%;
+    animation: fadeInUp 0.65s ease-out 0.15s both;
+  }
+
+  .extension-promo-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 22px 26px;
+    border-radius: var(--radius-xl);
+    background:
+      linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(139,92,246,0.06) 50%, rgba(66,133,244,0.06) 100%);
+    border: 1px solid rgba(96,165,250,0.22);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04) inset,
+      0 12px 40px rgba(0,0,0,0.25);
+  }
+
+  .extension-promo-logos {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  .extension-promo-chrome-mark {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 4px 14px rgba(66,133,244,0.35));
+  }
+
+  .extension-promo-plus {
+    font-size: 22px;
+    font-weight: 300;
     color: var(--text-muted);
-    margin: -8px 0 20px 0;
-    line-height: 1.5;
-    max-width: 520px;
-    animation: fadeInUp 0.6s ease-out 0.05s both;
+    line-height: 1;
+    user-select: none;
   }
 
-  .hero-extension-hint a {
-    color: var(--accent-light);
-    text-decoration: none;
-    border-bottom: 1px solid rgba(96, 165, 250, 0.35);
+  .extension-promo-ext-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    box-shadow:
+      0 4px 16px rgba(0,0,0,0.35),
+      0 0 0 1px rgba(255,255,255,0.06) inset;
   }
 
-  .hero-extension-hint a:hover {
-    border-bottom-color: var(--accent-light);
+  .extension-promo-copy {
+    flex: 1;
+    min-width: 240px;
   }
 
-  .hero-extension-pill {
-    display: inline-block;
-    font-size: 10px;
+  .extension-promo-copy h3 {
+    font-size: 17px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 2px 8px;
-    border-radius: 6px;
-    background: rgba(16, 185, 129, 0.12);
-    color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    margin-right: 6px;
-    vertical-align: middle;
+    letter-spacing: -0.25px;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+  }
+
+  .extension-promo-copy p {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    max-width: 520px;
+  }
+
+  .extension-promo-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 12px;
+    padding: 0 4px;
+    line-height: 1.45;
+    max-width: 900px;
+  }
+
+  .extension-promo-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(96,165,250,0.35);
+    color: var(--accent-light);
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .extension-promo-cta:hover {
+    background: rgba(59,130,246,0.12);
+    border-color: var(--accent);
+  }
+
+  .extension-promo-cta svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .extension-promo-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .extension-promo-soon {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 680px) {
+    .extension-promo { padding: 0 20px 20px; }
+    .extension-promo-inner { padding: 18px 18px; }
+    .extension-promo-logos { width: 100%; justify-content: center; }
+    .extension-promo-copy { text-align: center; width: 100%; }
+    .extension-promo-copy p { margin-left: auto; margin-right: auto; }
+    .extension-promo-cta-row { justify-content: center; }
+    .extension-promo-note { text-align: center; }
   }
 
   .hero h2 {
@@ -3645,11 +3749,6 @@
       <section class="hero">
         <div class="hero-content">
           <div class="hero-badge">AI-Powered Smartsheet Intelligence</div>
-          <p class="hero-extension-hint">
-            <span class="hero-extension-pill">Chrome</span>
-            Use the companion extension for a side panel next to Smartsheet (sheet detection from the URL).
-            <a href="https://github.com/Abdeltoto/smartsheet-controller/tree/main/extension" target="_blank" rel="noopener">Install from source</a>
-          </p>
           <h2>Talk to your<br><span class="gradient-text">Smartsheet.</span></h2>
           <p class="hero-desc">
             The most powerful AI interface for Smartsheet. Read, analyze, modify, and automate
@@ -3669,6 +3768,32 @@
         <div class="hero-image">
           <img src="/static/assets/hero-ai-chat.png" alt="AI Chat Interface connected to Smartsheet">
         </div>
+      </section>
+
+      <!-- ── Chrome extension promo ── -->
+      <section class="extension-promo" id="extension-promo" aria-labelledby="extension-promo-title">
+        <div class="extension-promo-inner">
+          <div class="extension-promo-logos">
+            <img class="extension-promo-chrome-mark" src="/static/assets/branding/google-chrome-logo.svg" width="54" height="54" alt="" aria-hidden="true">
+            <span class="extension-promo-plus">+</span>
+            <img class="extension-promo-ext-icon" src="/static/assets/branding/controller-extension-128.png" width="54" height="54" alt="Smartsheet Controller extension icon">
+          </div>
+          <div class="extension-promo-copy">
+            <h3 id="extension-promo-title">Chrome companion extension</h3>
+            <p>
+              Open Smartsheet with a side panel: sheet context from the page URL, quick prompts, and the same tools as here.
+              Install from the repository (unpack in <code style="font-size:0.92em;color:var(--accent-light);background:rgba(59,130,246,0.12);padding:2px 8px;border-radius:6px;">chrome://extensions</code>).
+            </p>
+            <div class="extension-promo-cta-row">
+              <a class="extension-promo-cta" href="https://github.com/Abdeltoto/smartsheet-controller/tree/main/extension" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                Install from GitHub (source)
+              </a>
+              <span class="extension-promo-soon">Chrome Web Store listing — coming soon</span>
+            </div>
+          </div>
+        </div>
+        <p class="extension-promo-note">Google Chrome and the Chrome logo are trademarks of Google LLC.</p>
       </section>
 
       <!-- ── Stats Banner ── -->
