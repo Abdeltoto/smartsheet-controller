@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prompts — Smartsheet Controller</title>
+  <link rel="stylesheet" href="styles/prompts-browser.css">
+</head>
+<body>
+  <div class="top">
+    <h1>Prompt catalogue</h1>
+    <p class="sub">Loaded from your Controller <code id="base-label">…</code></p>
+    <input type="search" id="q" placeholder="Search titles and prompts…" autocomplete="off" />
+  </div>
+  <div id="err" class="err" style="display:none;"></div>
+  <div id="root"></div>
+  <script src="prompts-browser.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+/**
+ * Hides marketing blocks on the landing/setup view when embedded in the
+ * Chrome side panel — keeps connect + chat usable in a narrow frame.
+ * Selectors match frontend/index.html structure.
+ */
+html.ssc-ext-embed #setup .landing section.hero,
+html.ssc-ext-embed #setup .landing section.stats-banner,
+html.ssc-ext-embed #setup .landing section.features,
+html.ssc-ext-embed #setup .landing section.providers-section,
+html.ssc-ext-embed #setup .landing section.usecases-section,
+html.ssc-ext-embed #setup .landing #favorites-section {
+  display: none !important;
+}
+
+html.ssc-ext-embed #setup .landing {
+  padding-top: 12px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+html.ssc-ext-embed #setup .landing .connect-section {
+  margin-top: 0 !important;
+}
+
+/* Slightly tighter connect block in embed */
+html.ssc-ext-embed .connect-container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}

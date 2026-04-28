@@ -20,6 +20,7 @@ from backend.llm_router import LLMRouter, PROVIDERS, get_provider_info
 from backend.agent import Agent
 from backend.rate_limit import check_limit, rate_limiter
 from backend import db as ssdb
+from backend.oauth_smartsheet import router as oauth_smartsheet_router
 
 setup_logging(os.getenv("LOG_LEVEL", "INFO"))
 log = get_logger(__name__)
@@ -93,6 +94,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Smartsheet Controller", lifespan=lifespan)
+app.include_router(oauth_smartsheet_router)
 
 
 def _touch(session_id: str) -> None:
@@ -1400,7 +1402,6 @@ async def websocket_chat(ws: WebSocket, session_id: str):
 
     async def send_event(event):
         await ws.send_json(event)
-        # Persist final assistant text into the conversation log
         if event.get("type") in ("response", "stream_end") and event.get("content"):
             await _persist_assistant(event["content"])
 

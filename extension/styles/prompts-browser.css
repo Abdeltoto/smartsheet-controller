@@ -1,0 +1,112 @@
+:root {
+  --bg: #060b18;
+  --card: #0f1732;
+  --text: #e8ecf4;
+  --muted: #94a3b8;
+  --accent: #3b82f6;
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 20px 16px 48px;
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.top h1 {
+  font-size: 1.15rem;
+  margin: 0 0 4px 0;
+}
+
+.sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 14px 0;
+}
+
+.sub code {
+  font-size: 11px;
+  color: #93c5fd;
+}
+
+input[type="search"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.err {
+  color: #f87171;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.cat {
+  margin-top: 22px;
+}
+
+.cat-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.card {
+  background: rgba(15, 23, 50, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.card h3 {
+  font-size: 13px;
+  margin: 0 0 6px 0;
+  font-weight: 600;
+}
+
+.card pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card .actions {
+  margin-top: 10px;
+}
+
+.card button {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.card button:hover {
+  filter: brightness(1.08);
+}
+
+.hidden {
+  display: none !important;
+}

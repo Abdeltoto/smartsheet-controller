@@ -1,6 +1,6 @@
 """Live smoke-test for the Palier 3 reliability harness.
 
-Talks to a running uvicorn instance on http://127.0.0.1:8000 and a real
+Talks to a running uvicorn instance on http://127.0.0.1:8100 and a real
 OpenAI key. Reproduces the original column/row confusion bug on the SSH
 test sheet (5067689119620) and asserts that:
 
@@ -32,8 +32,8 @@ from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(ROOT / ".env")
 
-BASE = "http://127.0.0.1:8000"
-WS_BASE = "ws://127.0.0.1:8000"
+BASE = "http://127.0.0.1:8100"
+WS_BASE = "ws://127.0.0.1:8100"
 SHEET_ID = "5067689119620"  # the SSH test sheet the user keeps for inspection
 SMARTSHEET_TOKEN = os.getenv("SMARTSHEET_TOKEN")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
@@ -165,7 +165,7 @@ async def main() -> int:
         except Exception as e:
             fail(f"server not reachable on {BASE}: {e}")
             print(f"\n{RED}Make sure uvicorn is running:{RESET}")
-            print(f'  $env:PYTHONUTF8="1"; uvicorn backend.app:app --reload --port 8000')
+            print(f'  $env:PYTHONUTF8="1"; uvicorn backend.app:app --reload --port 8100')
             return 1
 
     banner("Open session on SSH test sheet")

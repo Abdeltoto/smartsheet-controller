@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smartsheet Controller — Settings</title>
+  <link rel="stylesheet" href="styles/options.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>Controller origin</h1>
+    <p class="lead">Same URL you use to open the web app in a tab. The FastAPI server must be running.</p>
+    <form id="form">
+      <label for="origin">Base URL</label>
+      <input type="url" id="origin" placeholder="http://127.0.0.1:8100" autocomplete="off" spellcheck="false">
+      <button type="submit">Save</button>
+      <div id="status"></div>
+    </form>
+    <p class="note">Data stays between your browser and your server — this extension does not send Smartsheet credentials to third parties.</p>
+
+    <div class="section">
+      <h2>Smartsheet OAuth (optional)</h2>
+      <div id="oauth-mount"></div>
+    </div>
+
+    <div class="section">
+      <h2>Prompt library</h2>
+      <p class="mini">Browse copy-paste prompts from your running Controller (same catalogue as the web app).</p>
+      <p class="mini"><span class="link-inline" id="open-prompts" role="button" tabindex="0">Open prompts in a new tab</span></p>
+    </div>
+  </div>
+  <script src="options.js" type="module"></script>
+  <script src="oauth-options.js"></script>
+</body>
+</html>

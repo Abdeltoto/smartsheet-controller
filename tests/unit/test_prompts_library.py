@@ -226,3 +226,101 @@ class TestHelpPageStaticAssets:
         body = HELP_PAGE.read_text(encoding="utf-8")
         # The full-page version must offer a way back to the app.
         assert 'href="/"' in body or "href='/'" in body
+
+
+# ────────────────────────── Prompts sidebar (right margin) ──────────────────────────
+
+
+INDEX_PAGE = REPO_ROOT / "frontend" / "index.html"
+
+
+class TestPromptSidebarStaticAssets:
+    """The prompts sidebar lives in `index.html` and surfaces the same
+    `/api/prompts` catalogue as the Help modal, but in a denser, always-
+    at-hand form. These tests pin down the structural contract so a
+    refactor of the chat layout can't silently delete it.
+    """
+
+    @pytest.fixture(scope="class")
+    def index_html(self) -> str:
+        assert INDEX_PAGE.exists(), f"Missing {INDEX_PAGE}"
+        return INDEX_PAGE.read_text(encoding="utf-8")
+
+    def test_sidebar_container_present(self, index_html):
+        # The aside lives inside `#chat`, after `.chat-main`.
+        assert 'id="prompt-sidebar"' in index_html
+        assert 'aria-label="Prompts library"' in index_html
+
+    def test_header_toggle_button_present(self, index_html):
+        # A toggle in the top header (with a sensible default-hidden state
+        # since it should only appear once a session is open).
+        assert 'id="btn-prompt-sidebar"' in index_html
+        assert 'onclick="togglePromptSidebar()"' in index_html
+
+    def test_reopen_rail_present(self, index_html):
+        # When the user collapses the sidebar, a vertical "Prompts" rail
+        # on the right edge brings it back — without it, collapse becomes
+        # a one-way trap unless the user knows the keyboard shortcut.
+        assert 'id="prompt-sidebar-rail"' in index_html
+
+    def test_search_input_present(self, index_html):
+        assert 'id="psb-search"' in index_html
+        assert 'oninput="filterPromptSidebar(' in index_html
+
+    def test_body_container_present(self, index_html):
+        assert 'id="psb-body"' in index_html
+
+    def test_initialised_when_chat_opens(self, index_html):
+        # `openChat` must call `initPromptSidebar()` so the catalogue is
+        # rendered as soon as the user lands in the chat — otherwise the
+        # sidebar stays empty until they manually open it.
+        assert "initPromptSidebar();" in index_html
+
+    def test_keyboard_shortcut_wired(self, index_html):
+        # Ctrl+Shift+K toggles the sidebar.
+        assert "case 'K': e.preventDefault(); togglePromptSidebar();" in index_html
+        # And the shortcuts modal must document it so users can discover it.
+        assert "Toggle prompts sidebar" in index_html
+
+    def test_disconnect_clears_sidebar(self, index_html):
+        # On disconnect we hide the toggle and collapse the sidebar so the
+        # next account that connects starts in a clean state.
+        assert "if (psbSb) psbSb.classList.add('collapsed')" in index_html
+        assert "if (psbRail) psbRail.style.display = 'none'" in index_html
+
+    def test_core_functions_defined(self, index_html):
+        # Defensive: pin down the public function names that other parts
+        # of the file (and the tests) rely on.
+        for name in (
+            "function togglePromptSidebar",
+            "async function initPromptSidebar",
+            "function renderPromptSidebar",
+            "function filterPromptSidebar",
+            "function insertPromptSidebarPrompt",
+            "async function copyPromptSidebarPrompt",
+            "function togglePromptSidebarCategory",
+        ):
+            assert name in index_html, f"Missing JS function: {name}"
+
+    def test_persistence_keys_defined(self, index_html):
+        # The open/closed state and the open categories are persisted in
+        # localStorage. Hard-coding these keys here keeps us honest about
+        # backwards-compatibility if we ever rename them.
+        assert "ss_ctrl_psb_open" in index_html
+        assert "ss_ctrl_psb_open_cats" in index_html
+
+    def test_default_open_category_is_exploration(self, index_html):
+        # Per the UX brief, the "Exploration" category is the only one
+        # that should be expanded by default — that's the lowest-risk,
+        # most-discoverable starting point for new users.
+        assert "PSB_DEFAULT_OPEN_CATS = ['exploration']" in index_html
+
+    def test_exploration_category_exists(self, catalogue):
+        # The default-open category must actually exist in the catalogue,
+        # otherwise the sidebar opens with nothing visible.
+        ids = {c["id"] for c in catalogue["categories"]}
+        assert "exploration" in ids, (
+            "The sidebar defaults to the 'exploration' category being open. "
+            "If you renamed it, also update PSB_DEFAULT_OPEN_CATS in "
+            "index.html and this test."
+        )

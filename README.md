@@ -137,14 +137,15 @@ You know the drill. Open Smartsheet. Navigate. Click. Scroll. Find the right col
 
 </div>
 
+- **Prompts sidebar in the chat margin** (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>) — the full prompts library is now docked to the right of the chat, one click from the input. Hover any prompt to reveal a Copy button; click the title to **insert the prompt directly into the chat**. The sidebar keeps state across reloads, leaves a vertical re-open rail when collapsed, and slides into a full-width drawer on mobile.
 - **Header logout button** with a discreet red-hover SVG icon (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Q</kbd>) — clears the session token and reopens the connect screen in one click.
-- **Direct Help button** in the header — opens the full-screen [`/help`](http://localhost:8000/help) page in a new tab so you can keep the chat alive while scanning the catalogue.
+- **Direct Help button** in the header — opens the full-screen [`/help`](http://localhost:8100/help) page in a new tab so you can keep the chat alive while scanning the catalogue.
 - **Restyled global scrollbars** — slim, gradient (violet → cyan), Firefox-aware. Same look across the chat, the modals, and the dedicated `/help` page.
 - **Prompts library expansion** — from 28 to **81 prompts** across **13 categories**, now covering hierarchy, discussions, attachments, reports & dashboards, and workspace management on top of the original 8 categories.
 
 <br />
 
-> Want the recipes ? Open the in-app modal (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) or visit the dedicated [`/help`](http://localhost:8000/help) page once the server is running.
+> Want the recipes ? Open the in-app modal (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) or visit the dedicated [`/help`](http://localhost:8100/help) page once the server is running.
 
 <br />
 
@@ -257,8 +258,9 @@ The original "agent can't bring back values from another sheet" failure mode is 
 
 Onboarding new collaborators (or yourself, three months later) is the slowest part of any agent product. The Help section solves it:
 
-- **In-app modal** — <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> or the book button in the header. Live search, collapsible categories, per-prompt **difficulty** (easy / medium / advanced) and **risk** (safe / caution / destructive) badges, **Copy** and **Insert into chat** actions.
-- **Dedicated full-screen page** — [`/help`](http://localhost:8000/help). Reachable in one click from the header, sticky sidebar with category navigation and scroll-spy, ideal for screen-sharing or projecting during onboarding sessions.
+- **In-chat sidebar** — a dense, always-on-screen panel docked to the right of the chat (toggle with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> or the panel button in the header). One click on a prompt **inserts it into the input** ready to review and send; hover reveals a one-tap Copy button. Search, accordion categories, and the open/closed state are persisted in `localStorage`. Collapsing the sidebar leaves a vertical "Prompts" rail on the right edge so it's never more than one click away.
+- **In-app modal** — <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> or the book button in the header. Live search, collapsible categories, per-prompt **difficulty** (easy / medium / advanced) and **risk** (safe / caution / destructive) badges, **Copy** and **Insert into chat** actions. Use the modal when you want full prompt bodies and badges visible at a glance.
+- **Dedicated full-screen page** — [`/help`](http://localhost:8100/help). Reachable in one click from the header, sticky sidebar with category navigation and scroll-spy, ideal for screen-sharing or projecting during onboarding sessions.
 - **81 curated prompts across 13 categories** — covering virtually every Smartsheet surface the agent can touch:
   - *Exploration* · *Rows* · *Columns* · *Cross-sheet workflows* · *Formulas* · *Sharing & permissions* · *Automations* · *Maintenance & cleanup*
   - *Hierarchy & subtasks* · *Discussions & comments* · *Attachments & proofs* · *Reports & dashboards* · *Workspaces & navigation*
@@ -361,10 +363,10 @@ OPENAI_API_KEY=sk-...
 ### 3. Launch
 
 ```bash
-uvicorn backend.app:app --reload --port 8000
+uvicorn backend.app:app --reload --port 8100
 ```
 
-Open **http://localhost:8000** — hit **Quick Connect** — start talking.
+Open **http://localhost:8100** — hit **Quick Connect** — start talking.
 
 **That's it. Three commands. You're in.**
 
@@ -880,13 +882,13 @@ BUG_REPORTS_ADMIN_TOKEN=pick-a-long-random-secret
 ```bash
 # List the 50 most recent open bugs
 curl -H "X-Admin-Token: $BUG_REPORTS_ADMIN_TOKEN" \
-     "http://localhost:8000/api/bug-reports?status=open&limit=50"
+     "http://localhost:8100/api/bug-reports?status=open&limit=50"
 
 # Mark report #12 as fixed
 curl -X POST -H "X-Admin-Token: $BUG_REPORTS_ADMIN_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"status":"fixed"}' \
-     http://localhost:8000/api/bug-reports/12/status
+     http://localhost:8100/api/bug-reports/12/status
 ```
 
 The feature is covered by **25 dedicated tests** in `tests/unit/test_bug_reports.py` (DB CRUD, validation, server-side context enrichment, admin
@@ -917,7 +919,7 @@ pytest --cov=backend --cov-report=html   # coverage report → htmlcov/
 
 | Layer | Count | Speed | Network | Notable coverage |
 |---|---|---|---|---|
-| `unit` | **389** | < 3 s | none | Rate limiter · LLM router · `_friendly_error` (no secrets leaked) · **dispatch contract for all 73 tools** · **agent.run() loop** (confirm, parse-error recovery, `MAX_TOOL_ROUNDS`, image/chart events) · SQLite CRUD · MCP smoke (52 tools registered) · **Loop killer + Schema-guard + Intent subsetting** (107 P3 reliability tests) · **Cross-sheet intent subsetting (16 phrasings)** · **Bug reports CRUD + JSONL mirror (25 tests)** · **Prompts library JSON contract + endpoint (13 tests, incl. dynamic per-category validation + destructive-prompt confirmation guardrail across all 81 prompts)** · **`_build_welcome` resilience (12 tests covering `None` row/column counts and threshold boundaries)** |
+| `unit` | **401** | < 3 s | none | Rate limiter · LLM router · `_friendly_error` (no secrets leaked) · **dispatch contract for all 73 tools** · **agent.run() loop** (confirm, parse-error recovery, `MAX_TOOL_ROUNDS`, image/chart events) · SQLite CRUD · MCP smoke (52 tools registered) · **Loop killer + Schema-guard + Intent subsetting** (107 P3 reliability tests) · **Cross-sheet intent subsetting (16 phrasings)** · **Bug reports CRUD + JSONL mirror (25 tests)** · **Prompts library JSON contract + endpoint + sidebar wiring (25 tests, incl. dynamic per-category validation + destructive-prompt confirmation guardrail across all 81 prompts + 12 sidebar contract tests pinning down the in-chat panel)** · **`_build_welcome` resilience (12 tests covering `None` row/column counts and threshold boundaries)** |
 | `integration` | **41** | medium | Smartsheet | Real read calls + create→modify→delete lifecycle on a throwaway sheet · **all FastAPI routes** including `/api/csv-to-sheet`, `/api/smartsheet-webhook` (challenge + payload fan-out), favorites, conversations CRUD, audit, RGPD export, model switching |
 | `e2e` | **15** | medium | Smartsheet | Full FastAPI lifespan · WebSocket handshake · agent loop with stubbed LLM · suggestions extraction · **mid-stream cancel** · **destructive-tool confirm/reject** · **WS rate-limit response** · multi-turn in one connection · **scripted-LLM safety-net scenarios** (6 tests verifying the harness intercepts column/row confusion, infinite loops, schema violations) |
 | `functional` (live) | **38** | slow | Smartsheet | Cross-sheet formulas: aggregation (SUM/AVG/COUNT), conditional aggregation (SUMIFS, COUNTIFS, MAX/MIN(COLLECT)), lookups (VLOOKUP, INDEX/MATCH, INDEX/COLLECT), date ops, JOIN — with 404-retry logic to survive Smartsheet's eventual-consistency window |
@@ -933,10 +935,10 @@ pytest --cov=backend --cov-report=html   # coverage report → htmlcov/
 ```bash
 cp .env.example .env      # fill in at least OPENAI_API_KEY (SMARTSHEET_TOKEN is optional - users now BYOT)
 docker compose up -d --build
-# → http://localhost:8000   (health: http://localhost:8000/health)
+# → http://localhost:8100   (health: http://localhost:8100/health)
 ```
 
-The container runs `uvicorn backend.app:app` as a non-root user on port 8000, exposes a `/health` endpoint for orchestrator probes, and reads secrets from `.env`.
+The container runs `uvicorn backend.app:app` as a non-root user on port 8100, exposes a `/health` endpoint for orchestrator probes, and reads secrets from `.env`.
 
 ### Option 2 — Bare metal (systemd)
 
@@ -944,7 +946,7 @@ The container runs `uvicorn backend.app:app` as a non-root user on port 8000, ex
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn backend.app:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'
+uvicorn backend.app:app --host 0.0.0.0 --port 8100 --proxy-headers --forwarded-allow-ips '*'
 ```
 
 Example `/etc/systemd/system/smartsheet-controller.service`:
@@ -960,7 +962,7 @@ User=smartsheet
 WorkingDirectory=/opt/smartsheet-controller
 EnvironmentFile=/opt/smartsheet-controller/.env
 ExecStart=/opt/smartsheet-controller/.venv/bin/uvicorn backend.app:app \
-  --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips '*'
+  --host 127.0.0.1 --port 8100 --proxy-headers --forwarded-allow-ips '*'
 Restart=always
 RestartSec=5
 
@@ -987,7 +989,7 @@ server {
     client_max_body_size 2m;
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://127.0.0.1:8100;
         proxy_http_version 1.1;
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;
@@ -1000,7 +1002,7 @@ server {
         proxy_send_timeout 3600s;
     }
 
-    location = /health { proxy_pass http://127.0.0.1:8000/health; access_log off; }
+    location = /health { proxy_pass http://127.0.0.1:8100/health; access_log off; }
 }
 
 server {
