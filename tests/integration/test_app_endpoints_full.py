@@ -17,6 +17,11 @@ pytestmark = pytest.mark.integration
 
 # ────────────────────── helpers ──────────────────────
 
+def _auth_headers(ws_token: str, **extra) -> dict:
+    h = {"X-WS-Token": ws_token}
+    h.update(extra)
+    return h
+
 def _make_test_client(monkeypatch, tmp_path: Path) -> TestClient:
     """Same recipe as test_websocket_flow._create_test_app: temp DB + stub LLM."""
     db_file = tmp_path / "endpoints.sqlite"
@@ -56,15 +61,17 @@ def http_session(monkeypatch, tmp_path, smartsheet_token, sheet_id, openai_api_k
         })
         if r.status_code != 200:
             pytest.skip(f"Session bootstrap failed: {r.text}")
-        sid = r.json()["session_id"]
-        yield http, sid
+        body = r.json()
+        sid = body["session_id"]
+        ws_token = body["ws_token"]
+        yield http, sid, ws_token
 
 
 # ────────────────────── usage / disconnect ──────────────────────
 
 class TestUsageAndDisconnect:
     def test_usage_returns_token_breakdown(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         r = http.get(f"/api/usage?session_id={sid}")
         assert r.status_code == 200
         body = r.json()
@@ -74,20 +81,24 @@ class TestUsageAndDisconnect:
         assert "cache" in body
 
     def test_usage_invalid_session(self, http_session):
-        http, _ = http_session
+        http, _, ws_token = http_session
         r = http.get("/api/usage?session_id=does-not-exist")
         assert r.status_code == 400
         assert "error" in r.json()
 
     def test_disconnect_idempotent(self, http_session):
-        http, sid = http_session
-        r1 = http.post("/api/disconnect", json={"session_id": sid})
+        http, sid, ws_token = http_session
+        r1 = http.post(
+            "/api/disconnect",
+            json={"session_id": sid},
+            headers=_auth_headers(ws_token),
+        )
         assert r1.status_code == 200
         r2 = http.post("/api/disconnect", json={"session_id": sid})
         assert r2.status_code == 200  # second time still {"status": "ok"}
 
     def test_disconnect_unknown_session_ok(self, http_session):
-        http, _ = http_session
+        http, _, ws_token = http_session
         r = http.post("/api/disconnect", json={"session_id": "nope"})
         assert r.status_code == 200
 
@@ -96,7 +107,7 @@ class TestUsageAndDisconnect:
 
 class TestFavorites:
     def test_full_lifecycle(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
 
         # Empty by default
         r = http.get(f"/api/favorites?session_id={sid}")
@@ -131,7 +142,7 @@ class TestFavorites:
         assert all(str(f.get("sheet_id")) != "9999999999" for f in favs3)
 
     def test_favorites_invalid_session(self, http_session):
-        http, _ = http_session
+        http, _, ws_token = http_session
         for path in ("/api/favorites/add", "/api/favorites/remove"):
             r = http.post(path, json={"session_id": "nope", "sheet_id": "1"})
             assert r.status_code == 400
@@ -141,7 +152,7 @@ class TestFavorites:
 
 class TestConversations:
     def test_save_list_get_delete(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         cid = "test-conv-001"
 
         # Save
@@ -164,7 +175,7 @@ class TestConversations:
         # Delete
         r = http.post("/api/conversations/delete", json={
             "session_id": sid, "conversation_id": cid,
-        })
+        }, headers=_auth_headers(ws_token))
         assert r.status_code == 200
         assert r.json()["status"] == "ok"
 
@@ -173,7 +184,7 @@ class TestConversations:
         assert not any(c.get("id") == cid for c in listed2)
 
     def test_migrate_imports_localstorage(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         payload = {
             "session_id": sid,
             "conversations": [
@@ -190,7 +201,7 @@ class TestConversations:
                 {"id": "old-2", "title": "Imported #2", "messages": []},
             ],
         }
-        r = http.post("/api/conversations/migrate", json=payload)
+        r = http.post("/api/conversations/migrate", json=payload, headers=_auth_headers(ws_token))
         assert r.status_code == 200
         assert r.json()["imported"] == 2
 
@@ -210,20 +221,25 @@ class TestConversations:
 
 class TestAuditAndExport:
     def test_audit_returns_entries_field(self, http_session):
-        http, sid = http_session
-        r = http.get(f"/api/audit?session_id={sid}")
+        http, sid, ws_token = http_session
+        r = http.get(f"/api/audit?session_id={sid}", headers=_auth_headers(ws_token))
         assert r.status_code == 200
         assert "entries" in r.json()
 
     def test_audit_limit_clamped(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         # Server clamps limit to 1000
-        r = http.get(f"/api/audit?session_id={sid}&limit=999999")
+        r = http.get(f"/api/audit?session_id={sid}&limit=999999", headers=_auth_headers(ws_token))
         assert r.status_code == 200
 
-    def test_export_returns_attachment(self, http_session):
-        http, sid = http_session
+    def test_export_requires_ws_token(self, http_session):
+        http, sid, _ws = http_session
         r = http.get(f"/api/export?session_id={sid}")
+        assert r.status_code == 403
+
+    def test_export_returns_attachment(self, http_session):
+        http, sid, ws_token = http_session
+        r = http.get(f"/api/export?session_id={sid}", headers=_auth_headers(ws_token))
         assert r.status_code == 200
         assert "attachment" in r.headers.get("content-disposition", "")
         body = r.json()
@@ -235,7 +251,7 @@ class TestAuditAndExport:
 
 class TestSwitchModel:
     def test_switch_within_same_provider(self, http_session, openai_api_key):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         r = http.post("/api/switch-model", json={
             "session_id": sid, "provider": "openai", "model": "gpt-4o",
         })
@@ -243,14 +259,14 @@ class TestSwitchModel:
         assert r.json()["model"] == "gpt-4o"
 
     def test_unknown_provider_rejected(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         r = http.post("/api/switch-model", json={
             "session_id": sid, "provider": "fakeai", "model": "x",
         })
         assert r.status_code == 400
 
     def test_invalid_session_rejected(self, http_session):
-        http, _ = http_session
+        http, _, ws_token = http_session
         r = http.post("/api/switch-model", json={
             "session_id": "nope", "provider": "openai", "model": "gpt-4o-mini",
         })
@@ -261,7 +277,7 @@ class TestSwitchModel:
 
 class TestPinUnpinSheet:
     def test_pin_unknown_sheet_returns_error(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         r = http.post("/api/pin-sheet", json={
             "session_id": sid, "sheet_id": "0",
         })
@@ -276,13 +292,13 @@ class TestPinUnpinSheet:
 
 class TestWebhookEventsPolling:
     def test_empty_events_for_fresh_session(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         r = http.get(f"/api/webhook-events?session_id={sid}")
         assert r.status_code == 200
         assert r.json()["events"] == []
 
     def test_invalid_session_rejected(self, http_session):
-        http, _ = http_session
+        http, _, ws_token = http_session
         r = http.get("/api/webhook-events?session_id=nope")
         assert r.status_code == 400
 
@@ -291,17 +307,17 @@ class TestWebhookEventsPolling:
 
 class TestCsvToSheet:
     def test_validation_errors(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         # No name
         r = http.post("/api/csv-to-sheet", json={
             "session_id": sid, "name": "", "headers": ["a"], "rows": [],
-        })
+        }, headers=_auth_headers(ws_token))
         assert r.status_code == 400
 
         # No headers
         r = http.post("/api/csv-to-sheet", json={
             "session_id": sid, "name": "X", "headers": [], "rows": [],
-        })
+        }, headers=_auth_headers(ws_token))
         assert r.status_code == 400
 
         # Too many columns
@@ -309,7 +325,7 @@ class TestCsvToSheet:
             "session_id": sid, "name": "X",
             "headers": [f"c{i}" for i in range(201)],
             "rows": [],
-        })
+        }, headers=_auth_headers(ws_token))
         assert r.status_code == 400
 
         # Invalid session
@@ -319,7 +335,7 @@ class TestCsvToSheet:
         assert r.status_code == 404
 
     def test_create_and_cleanup_or_skip(self, http_session, smartsheet_token):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         import time
         name = f"pytest-csv-{int(time.time())}"
 
@@ -328,7 +344,7 @@ class TestCsvToSheet:
             "name": name,
             "headers": ["Name", "Value"],
             "rows": [["alpha", "1"], ["beta", "2"], ["gamma", "3"]],
-        })
+        }, headers=_auth_headers(ws_token))
 
         if r.status_code != 200:
             # Account may not allow create_sheet at home level → skip gracefully
@@ -357,13 +373,13 @@ class TestCsvToSheet:
 
 class TestInboundWebhook:
     def test_verification_challenge_echoed(self, http_session):
-        http, _ = http_session
+        http, _, ws_token = http_session
         r = http.post("/api/smartsheet-webhook", json={"challenge": "abc123"})
         assert r.status_code == 200
         assert r.json() == {"smartsheetHookResponse": "abc123"}
 
     def test_event_payload_persisted_and_polled(self, http_session, sheet_id):
-        http, sid = http_session
+        http, sid, ws_token = http_session
 
         # Simulate Smartsheet calling our endpoint
         payload = {
@@ -387,7 +403,7 @@ class TestInboundWebhook:
         assert "row.updated" in types
 
     def test_event_with_no_matching_session_still_persisted(self, http_session):
-        http, _ = http_session
+        http, _, ws_token = http_session
         # Use a sheet ID that no session is connected to
         payload = {
             "webhookId": 8888,
@@ -404,7 +420,7 @@ class TestInboundWebhook:
 
 class TestGenerateTitle:
     def test_empty_snippet_returns_blank(self, http_session):
-        http, sid = http_session
+        http, sid, ws_token = http_session
         r = http.post("/api/generate-title", json={
             "session_id": sid, "snippet": "  ",
         })
@@ -412,7 +428,7 @@ class TestGenerateTitle:
         assert r.json().get("title") == ""
 
     def test_invalid_session_rejected(self, http_session):
-        http, _ = http_session
+        http, _, ws_token = http_session
         r = http.post("/api/generate-title", json={
             "session_id": "nope", "snippet": "Hello",
         })

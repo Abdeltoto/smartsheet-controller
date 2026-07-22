@@ -141,7 +141,7 @@ Objectif : quand la même UI est dans l’iframe, **réduire le bruit** (landing
 
 - [x] Captures — guide dimensions + liste des plans (`extension/store/screenshots/README.md`)
 - [x] Politique de confidentialité — fichier **`extension/store/privacy-policy.html`** + guide d’hébergement HTTPS (`SUBMISSION-GUIDE.md`)
-- [x] Fiche Store — textes & justifications (`chrome-web-store-listing.md`), ZIP (`SUBMISSION-GUIDE.md`)
+- [x] Fiche Store — textes & justifications (`chrome-web-store-listing.md`), ZIP (`build_store_package.py` + `SUBMISSION-GUIDE.md`)
 - [ ] Déposer soi‑même : compte payant développeur, ZIP, screenshots finales, soumission dashboard — **manuel**
 
 ---

@@ -111,7 +111,26 @@ Traffic goes to **your** Controller server (and Smartsheet as usual in another t
 | Resource | Purpose |
 |---------|---------|
 | **[`SIMPLIFICATION-PLAN.md`](SIMPLIFICATION-PLAN.md)** | Architecture checklist and phased roadmap. |
-| **[`store/`](store/)** | Listing copy, privacy policy HTML, ZIP, screenshot checklist (**Phase D**). |
+| **[`store/`](store/)** | Listing copy, privacy policy HTML, submission guide (**Phase D**). |
+| **`manifest.dev.json`** | Local dev — localhost in `host_permissions`. Active file: **`manifest.json`**. |
+| **`manifest.prod.json`** | Chrome Web Store — Smartsheet only + optional localhost. |
+
+### Build the Store ZIP
+
+From the **repo root**:
+
+```bash
+python extension/scripts/build_store_package.py
+# → dist/smartsheet-controller-extension-1.3.1.zip
+```
+
+For a deployed HTTPS Controller:
+
+```bash
+python extension/scripts/build_store_package.py --controller-origin https://chat.example.com
+```
+
+Upload the ZIP to the [Chrome Web Store developer dashboard](https://chrome.google.com/webstore/devconsole). See **`store/SUBMISSION-GUIDE.md`**.
 
 ---
 
@@ -129,8 +148,8 @@ Requires **Pillow** (`pip install pillow`).
 
 ### Next steps
 
-- Package for **Chrome Web Store** (screenshots, privacy policy URL) — Phase D.
-- Expand **`host_permissions`** / patterns for your production domain.
+- Run **`python extension/scripts/build_store_package.py`** and follow **`store/SUBMISSION-GUIDE.md`** for Chrome Web Store upload.
+- Host **`store/privacy-policy.html`** on HTTPS before submitting.
 
 ---
 
@@ -144,6 +163,8 @@ Requires **Pillow** (`pip install pillow`).
 | **`options.html`**, **`options.js`**, **`styles/options.css`**, **`oauth-options.js`** | Controller base URL + OAuth helpers |
 | **`prompts-browser.html`**, **`prompts-browser.js`**, **`styles/prompts-browser.css`** | Prompts browser against live API |
 | **`content/embed.js`**, **`content/embed.css`** | Embedded landing tweaks |
+| **`permissions.js`** | Optional host permission request when Controller origin changes |
+| **`scripts/build_store_package.py`** | Builds Chrome Web Store ZIP into `dist/` |
 | **`scripts/generate_icons.py`** | Builds `icons/icon-*.png` |
 | **`store/`** | Web Store assets |
 

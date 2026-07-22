@@ -12,7 +12,7 @@
 
 <a href="https://github.com/Abdeltoto"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=800&size=28&duration=4000&pause=999999&color=58A6FF&center=true&vCenter=true&repeat=false&width=500&lines=Created+by+Abdel+ATIA" alt="Created by Abdel ATIA" /></a>
 <br />
-<a href="https://github.com/Abdeltoto"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=500&size=18&duration=3500&pause=1500&color=8B949E&center=true&vCenter=true&width=620&lines=Smartsheet+Lover+%26+Power+User+since+2013;Building+the+future+of+sheet+management;Your+sheets+have+ears+now.+%F0%9F%8E%A7;73+tools.+7+LLMs.+445+green+tests.+%F0%9F%9A%80;Cross-sheet+lookups+done+right.;81+prompts+in+13+categories+%E2%80%94+Ctrl%2BShift%2BL;Logout+%2B+full-page+Help+now+one+click+away;One-click+bug+reports.+%F0%9F%90%9B" alt="Smartsheet Lover & Power User since 2013" /></a>
+<a href="https://github.com/Abdeltoto"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=500&size=18&duration=3500&pause=1500&color=8B949E&center=true&vCenter=true&width=620&lines=Smartsheet+Lover+%26+Power+User+since+2013;Building+the+future+of+sheet+management;Your+sheets+have+ears+now.+%F0%9F%8E%A7;73+tools.+7+LLMs.+487+green+tests.+%F0%9F%9A%80;Cross-sheet+lookups+done+right.;81+prompts+in+13+categories+%E2%80%94+Ctrl%2BShift%2BL;Logout+%2B+full-page+Help+now+one+click+away;One-click+bug+reports.+%F0%9F%90%9B" alt="Smartsheet Lover & Power User since 2013" /></a>
 <br />
 [![GitHub](https://img.shields.io/badge/Abdeltoto-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/Abdeltoto)
 
@@ -28,14 +28,12 @@
 [![Anthropic](https://img.shields.io/badge/Anthropic-Claude-D4A373?style=for-the-badge&logo=anthropic&logoColor=white)](https://anthropic.com)
 [![+5 LLMs](https://img.shields.io/badge/+5-Google%20·%20OpenRouter%20·%20Mistral%20·%20Groq%20·%20DeepSeek-FF6B6B?style=for-the-badge)](#-bring-your-own-model)
 [![MCP](https://img.shields.io/badge/MCP-Protocol-8B5CF6?style=for-the-badge)](https://modelcontextprotocol.io)
-[![Tests](https://img.shields.io/badge/tests-445%20green-10B981?style=for-the-badge&logo=pytest&logoColor=white)](#running-the-test-suite)
+[![Tests](https://img.shields.io/badge/tests-487%20green-10B981?style=for-the-badge&logo=pytest&logoColor=white)](#running-the-test-suite)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 <br />
 
-**73 Smartsheet tools · 80 formulas · 7 LLM providers · 445 green tests · 81 in-app prompts · Full voice control · One conversation.**
-
-**Chrome extension:** the same Controller runs in Chrome’s **side panel** beside [Smartsheet](https://app.smartsheet.com) ([details & install](#chrome-extension)).
+**73 Smartsheet tools · 80 formulas · 7 LLM providers · 487 green tests · 81 in-app prompts · Full voice control · One conversation.**
 
 A community-built AI agent that *speaks the Smartsheet API fluently* — built for developers and power-users.
 Read, write, analyze, automate, share, and visualize — by just asking.
@@ -47,7 +45,6 @@ Read, write, analyze, automate, share, and visualize — by just asking.
 
 [**Quick Start**](#quick-start) ·
 [What's New](#whats-new--april-2026) ·
-[Chrome extension](#chrome-extension) ·
 [The Power](#the-power) ·
 [Cross-sheet workflow](#cross-sheet-the-right-way) ·
 [Prompts library](#prompts-library--in-app-help) ·
@@ -142,38 +139,13 @@ You know the drill. Open Smartsheet. Navigate. Click. Scroll. Find the right col
 
 - **Prompts sidebar in the chat margin** (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>) — the full prompts library is now docked to the right of the chat, one click from the input. Hover any prompt to reveal a Copy button; click the title to **insert the prompt directly into the chat**. The sidebar keeps state across reloads, leaves a vertical re-open rail when collapsed, and slides into a full-width drawer on mobile.
 - **Header logout button** with a discreet red-hover SVG icon (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Q</kbd>) — clears the session token and reopens the connect screen in one click.
-- **Direct Help button** in the header — opens the full-screen [`/help`](http://localhost:8100/help) page in a new tab so you can keep the chat alive while scanning the catalogue.
+- **Direct Help button** in the header — opens the full-screen [`/help`](http://localhost:8000/help) page in a new tab so you can keep the chat alive while scanning the catalogue.
 - **Restyled global scrollbars** — slim, gradient (violet → cyan), Firefox-aware. Same look across the chat, the modals, and the dedicated `/help` page.
-- **Chrome extension (`extension/`)** — MV3 side panel beside Smartsheet, sheet ID from the URL, embed mode **`ssc_ext=1`** for a focused UI ([Chrome extension](#chrome-extension)).
+- **Prompts library expansion** — from 28 to **81 prompts** across **13 categories**, now covering hierarchy, discussions, attachments, reports & dashboards, and workspace management on top of the original 8 categories.
 
 <br />
 
-> Want the recipes ? Open the in-app modal (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) or visit the dedicated [`/help`](http://localhost:8100/help) page once the server is running.
-
-<br />
-
-<div align="center">
-
-<img src="frontend/assets/readme-chrome-extension-banner.png" alt="Illustration: Chrome side panel beside a sheet grid with an AI chat" width="860" />
-
-<sub><i>Concept art — Manifest V3 side panel next to your sheet.</i></sub>
-
-</div>
-
-<br />
-
-## Chrome extension
-
-The web app isn’t browser-only fiction: **`extension/`** is a **Manifest V3** Chrome extension that loads your running Controller (same FastAPI backend) inside **Chrome’s side panel**, docked next to Smartsheet. The content script detects the sheet ID from `app.smartsheet.com` URLs and passes **`ssc_ext=1`** so the embedded iframe can strip extra chrome; the toolbar icon can show when a sheet page is detected.
-
-| | |
-|:---:|:---|
-| **Install** | **Load unpacked** from `chrome://extensions` (**Developer mode**) → choose the [`extension/`](extension/) folder ([step-by-step](extension/README.md)). |
-| **Hotkey** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd> — open side panel ([see extension README](extension/README.md)). |
-| **Privacy / Store** | Web Store checklist and packaging live under [`extension/store/`](extension/store/). |
-| **Trademark** | *Google Chrome* and the Chrome logo are trademarks of Google LLC. |
-
-<sub>The landing page [`frontend/index.html`](frontend/index.html) also highlights the extension using assets under [`frontend/assets/branding/`](frontend/assets/branding/).</sub>
+> Want the recipes ? Open the in-app modal (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) or visit the dedicated [`/help`](http://localhost:8000/help) page once the server is running.
 
 <br />
 
@@ -288,7 +260,7 @@ Onboarding new collaborators (or yourself, three months later) is the slowest pa
 
 - **In-chat sidebar** — a dense, always-on-screen panel docked to the right of the chat (toggle with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> or the panel button in the header). One click on a prompt **inserts it into the input** ready to review and send; hover reveals a one-tap Copy button. Search, accordion categories, and the open/closed state are persisted in `localStorage`. Collapsing the sidebar leaves a vertical "Prompts" rail on the right edge so it's never more than one click away.
 - **In-app modal** — <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> or the book button in the header. Live search, collapsible categories, per-prompt **difficulty** (easy / medium / advanced) and **risk** (safe / caution / destructive) badges, **Copy** and **Insert into chat** actions. Use the modal when you want full prompt bodies and badges visible at a glance.
-- **Dedicated full-screen page** — [`/help`](http://localhost:8100/help). Reachable in one click from the header, sticky sidebar with category navigation and scroll-spy, ideal for screen-sharing or projecting during onboarding sessions.
+- **Dedicated full-screen page** — [`/help`](http://localhost:8000/help). Reachable in one click from the header, sticky sidebar with category navigation and scroll-spy, ideal for screen-sharing or projecting during onboarding sessions.
 - **81 curated prompts across 13 categories** — covering virtually every Smartsheet surface the agent can touch:
   - *Exploration* · *Rows* · *Columns* · *Cross-sheet workflows* · *Formulas* · *Sharing & permissions* · *Automations* · *Maintenance & cleanup*
   - *Hierarchy & subtasks* · *Discussions & comments* · *Attachments & proofs* · *Reports & dashboards* · *Workspaces & navigation*
@@ -391,10 +363,22 @@ OPENAI_API_KEY=sk-...
 ### 3. Launch
 
 ```bash
-uvicorn backend.app:app --reload --port 8100
+uvicorn backend.app:app --reload --port 8000
 ```
 
-Open **http://localhost:8100** — hit **Quick Connect** — start talking.
+**Frontend build (Vite, optional but recommended for production):**
+
+```bash
+cd frontend
+npm install
+npm run build          # outputs to frontend/dist/ — FastAPI serves it automatically
+npm run dev            # Vite dev server on :5173 (proxies /api to :8000)
+npm run test:e2e       # Playwright smoke tests (landing + /health)
+```
+
+Legacy monolith preserved at `frontend/index.legacy.html` for reference.
+
+Open **http://localhost:8000** — hit **Quick Connect** — start talking.
 
 **That's it. Three commands. You're in.**
 
@@ -767,7 +751,14 @@ smartsheet-controller/
 │   ├── mcp_server.py          → MCP server (52 tools, 3 resources, 3 prompts)
 │   └── __main__.py            → MCP CLI entry point (stdio / http)
 ├── frontend/
-│   ├── index.html             → Glassmorphism SPA (voice, streaming, history, suggestions, watch)
+│   ├── index.html             → SPA shell (HTML markup only)
+│   ├── src/
+│   │   ├── main.js            → Vite entry (vendor libs + init)
+│   │   ├── styles/main.css    → All app styles
+│   │   └── legacy/app.js      → App logic (transitional monolith)
+│   ├── dist/                  → Production build output (served by FastAPI when present)
+│   ├── e2e/                   → Playwright smoke tests
+│   ├── package.json           → Vite + marked + DOMPurify + Chart.js
 │   └── assets/                → Brand & marketing assets (PNG, SVG)
 ├── tests/
 │   ├── unit/                  → 196 fast tests (no I/O, mocked transports)
@@ -910,13 +901,13 @@ BUG_REPORTS_ADMIN_TOKEN=pick-a-long-random-secret
 ```bash
 # List the 50 most recent open bugs
 curl -H "X-Admin-Token: $BUG_REPORTS_ADMIN_TOKEN" \
-     "http://localhost:8100/api/bug-reports?status=open&limit=50"
+     "http://localhost:8000/api/bug-reports?status=open&limit=50"
 
 # Mark report #12 as fixed
 curl -X POST -H "X-Admin-Token: $BUG_REPORTS_ADMIN_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"status":"fixed"}' \
-     http://localhost:8100/api/bug-reports/12/status
+     http://localhost:8000/api/bug-reports/12/status
 ```
 
 The feature is covered by **25 dedicated tests** in `tests/unit/test_bug_reports.py` (DB CRUD, validation, server-side context enrichment, admin
@@ -928,16 +919,16 @@ gate, JSONL mirror, status transitions).
 
 <div align="center">
 
-<img src="frontend/assets/feature-robustness.png" alt="445 green tests across unit, integration and e2e" width="820" />
+<img src="frontend/assets/feature-robustness.png" alt="487 green tests across unit, integration and e2e" width="820" />
 
-<sub><i>445 tests · 3 layers · 0 leaks · ~4 min on a laptop.</i></sub>
+<sub><i>487 tests · 3 layers · 0 leaks · ~4 min on a laptop.</i></sub>
 
 </div>
 
 ```bash
 pip install -r requirements-dev.txt
 
-pytest                       # everything (445 tests, ~4 min)
+pytest                       # everything (487 tests, ~4 min)
 pytest tests/unit            # 389 fast tests, <2s, no network
 pytest tests/integration     # 41 real Smartsheet API tests
 pytest tests/e2e             # 15 WebSocket end-to-end (stubbed LLM, no cost)
@@ -956,6 +947,20 @@ pytest --cov=backend --cov-report=html   # coverage report → htmlcov/
 
 ---
 
+### Option 3 — Chrome extension (side panel)
+
+Dock the same Controller UI beside `app.smartsheet.com` in Chrome’s side panel. The extension detects the sheet ID from the tab URL and passes it into the iframe (`ssc_ext=1`).
+
+| Step | Action |
+|------|--------|
+| **Dev** | `chrome://extensions` → Load unpacked → select the `extension/` folder. Run `uvicorn backend.app:app --port 8100`. |
+| **Store ZIP** | `python extension/scripts/build_store_package.py` → upload `dist/smartsheet-controller-extension-*.zip` to the [Chrome Web Store dashboard](https://chrome.google.com/webstore/devconsole). |
+| **HTTPS deploy** | `python extension/scripts/build_store_package.py --controller-origin https://chat.example.com` then set the same URL in extension Options. |
+
+Full docs: [`extension/README.md`](extension/README.md) · listing copy & privacy: [`extension/store/`](extension/store/).
+
+---
+
 ## Deployment
 
 ### Option 1 — Docker (recommended)
@@ -963,10 +968,10 @@ pytest --cov=backend --cov-report=html   # coverage report → htmlcov/
 ```bash
 cp .env.example .env      # fill in at least OPENAI_API_KEY (SMARTSHEET_TOKEN is optional - users now BYOT)
 docker compose up -d --build
-# → http://localhost:8100   (health: http://localhost:8100/health)
+# → http://localhost:8000   (health: http://localhost:8000/health)
 ```
 
-The container runs `uvicorn backend.app:app` as a non-root user on port 8100, exposes a `/health` endpoint for orchestrator probes, and reads secrets from `.env`.
+The container runs `uvicorn backend.app:app` as a non-root user on port 8000, exposes a `/health` endpoint for orchestrator probes, and reads secrets from `.env`.
 
 ### Option 2 — Bare metal (systemd)
 
@@ -974,7 +979,7 @@ The container runs `uvicorn backend.app:app` as a non-root user on port 8100, ex
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn backend.app:app --host 0.0.0.0 --port 8100 --proxy-headers --forwarded-allow-ips '*'
+uvicorn backend.app:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'
 ```
 
 Example `/etc/systemd/system/smartsheet-controller.service`:
@@ -990,7 +995,7 @@ User=smartsheet
 WorkingDirectory=/opt/smartsheet-controller
 EnvironmentFile=/opt/smartsheet-controller/.env
 ExecStart=/opt/smartsheet-controller/.venv/bin/uvicorn backend.app:app \
-  --host 127.0.0.1 --port 8100 --proxy-headers --forwarded-allow-ips '*'
+  --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips '*'
 Restart=always
 RestartSec=5
 
@@ -1017,7 +1022,7 @@ server {
     client_max_body_size 2m;
 
     location / {
-        proxy_pass http://127.0.0.1:8100;
+        proxy_pass http://127.0.0.1:8000;
         proxy_http_version 1.1;
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;
@@ -1030,7 +1035,7 @@ server {
         proxy_send_timeout 3600s;
     }
 
-    location = /health { proxy_pass http://127.0.0.1:8100/health; access_log off; }
+    location = /health { proxy_pass http://127.0.0.1:8000/health; access_log off; }
 }
 
 server {
@@ -1077,7 +1082,7 @@ server {
 
 ### `Talk to Your Smartsheet.`
 
-**73 tools · 80 formulas · 7 LLMs · 445 green tests · 81 in-app prompts · Full voice · Streaming · History · Audit · MCP · Bug reports · One-click logout.**
+**73 tools · 80 formulas · 7 LLMs · 487 green tests · 81 in-app prompts · Full voice · Streaming · History · Audit · MCP · Bug reports · One-click logout.**
 
 *Your data listens. Your sheets respond. Your workflow accelerates.*
 

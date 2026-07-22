@@ -1,5 +1,8 @@
+import { DEFAULT_ORIGIN, ORIGIN_KEY, isValidSheetId } from './constants.js';
+import { ensureOriginPermission } from './permissions.js';
+
 /**
- * Detects sheet IDs from Smartsheet app URLs and stores them for the side panel iframe.
+ * Detects sheet IDs from Smartsheet app URLs.
  * Path pattern: .../sheets/<numericId>
  */
 function extractSheetId(url) {
@@ -13,19 +16,67 @@ function extractSheetId(url) {
   }
 }
 
+async function updateSheetContextForTab(tab) {
+  if (!tab?.id) return;
+
+  const sheetId = tab.url ? extractSheetId(tab.url) : null;
+
+  if (sheetId && isValidSheetId(sheetId)) {
+    await chrome.storage.session.set({
+      detectedSheetId: sheetId,
+      detectedSheetUrl: tab.url,
+      detectedAt: Date.now(),
+    });
+    await chrome.action.setBadgeText({ text: '●', tabId: tab.id });
+    await chrome.action.setBadgeBackgroundColor({ color: '#3B82F6', tabId: tab.id });
+    return;
+  }
+
+  await chrome.action.setBadgeText({ text: '', tabId: tab.id });
+
+  try {
+    const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (active?.id === tab.id) {
+      await chrome.storage.session.remove([
+        'detectedSheetId',
+        'detectedSheetUrl',
+        'detectedAt',
+      ]);
+    }
+  } catch {
+    /* tab may have closed */
+  }
+}
+
+async function syncControllerPermissions(origin) {
+  await ensureOriginPermission(origin || DEFAULT_ORIGIN);
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+  chrome.storage.sync
+    .get({ [ORIGIN_KEY]: DEFAULT_ORIGIN })
+    .then((data) => syncControllerPermissions(data[ORIGIN_KEY]));
 });
 
-chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
-  if (!tab?.url || info.status !== 'complete') return;
-  const sheetId = extractSheetId(tab.url);
-  if (!sheetId) return;
-  chrome.storage.session.set({
-    detectedSheetId: sheetId,
-    detectedSheetUrl: tab.url,
-    detectedAt: Date.now(),
-  });
-  chrome.action.setBadgeText({ text: '●', tabId });
-  chrome.action.setBadgeBackgroundColor({ color: '#3B82F6', tabId });
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg?.type === 'origin_updated') {
+    syncControllerPermissions(msg.origin).then((ok) => sendResponse({ ok }));
+    return true;
+  }
+  return false;
+});
+
+chrome.tabs.onUpdated.addListener((_tabId, info, tab) => {
+  if (info.status !== 'complete') return;
+  updateSheetContextForTab(tab);
+});
+
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    await updateSheetContextForTab(tab);
+  } catch {
+    /* tab closed while switching */
+  }
 });

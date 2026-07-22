@@ -66,6 +66,22 @@
       background: rgba(255, 255, 255, 0.1);
       color: #e2e8f0;
     }
+    .chrome-bar .btn-reload {
+      flex-shrink: 0;
+      width: 28px;
+      height: 26px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1;
+    }
+    .chrome-bar .btn-reload:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+    }
     iframe {
       flex: 1;
       border: 0;
@@ -79,6 +95,7 @@
   <header class="chrome-bar" id="chrome-bar" aria-label="Smartsheet context">
     <span class="dot off" id="status-dot" aria-hidden="true"></span>
     <p class="msg" id="hint">Loading…</p>
+    <button type="button" class="btn-reload" id="btn-reload" title="Reload panel" aria-label="Reload panel">↻</button>
     <button type="button" class="btn-opts" id="btn-opts" title="Server URL & settings" aria-label="Open settings">⚙</button>
   </header>
   <iframe id="app" title="Smartsheet Controller"></iframe>

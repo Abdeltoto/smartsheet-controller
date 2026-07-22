@@ -1,0 +1,21 @@
+{
+  "name": "smartsheet-controller-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.8",
+    "dompurify": "^3.2.4",
+    "marked": "^15.0.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "vite": "^6.2.0"
+  }
+}

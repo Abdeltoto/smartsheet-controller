@@ -19,9 +19,9 @@ pytest -m e2e
 
 | Layer | Tests | Speed | Network | What it covers |
 |---|---|---|---|---|
-| `unit` | 196 | <2s | none | Pure logic: rate limiter, LLM router (parsing, usage, switch), tools (intent routing, schema validity, **dispatch contract for all 73 tools**), `_friendly_error` helper, Smartsheet client (mock transport: retry, cache, CRUD), SQLite DB CRUD (users, sessions, conversations, favorites, audit, webhooks), agent helpers, **agent.run() loop** (tool dispatch, confirm approve/reject, parse-error recovery, MAX_TOOL_ROUNDS, image/chart events), MCP server smoke (52 tools registered). |
-| `integration` | 41 | medium | Smartsheet API | Real Smartsheet read calls + create→modify→delete lifecycle on a throwaway sheet. **All FastAPI HTTP routes**: `/health`, `/api/env-status`, `/api/providers`, `/api/validate-token`, `/api/session`, `/api/usage`, `/api/disconnect`, `/api/switch-model`, `/api/csv-to-sheet`, `/api/conversations/*`, `/api/favorites/*`, `/api/audit`, `/api/export`, `/api/webhook-events`, `/api/smartsheet-webhook` (challenge + payload fan-out), `/api/quick-connect`, `/api/generate-title`, `/api/pin-sheet`. |
-| `e2e` | 9 | medium | Smartsheet API | Full FastAPI lifespan, session bootstrap, WebSocket handshake, agent loop with stubbed LLM, suggestions extraction, **cancel mid-stream**, **destructive-tool confirm/reject over WS**, **rate-limit response**, multi-turn conversation in a single connection. |
+| `unit` | 420 | ~12s | none | Pure logic: rate limiter, LLM router, tools (intent routing, schema validity, **dispatch contract for all 73 tools**), `_friendly_error` helper, Smartsheet client (mock transport), SQLite DB CRUD, agent loop, MCP smoke, session auth, watch mode, prompts library, bug reports, extension manifest + store ZIP gate. |
+| `integration` | 42 | medium | Smartsheet API | Real Smartsheet read calls + create→modify→delete lifecycle. **All FastAPI HTTP routes**. Functional runners gated in `test_functional_runners.py`. |
+| `e2e` | 15 | medium | Smartsheet API | Full FastAPI lifespan, WebSocket handshake, agent loop with stubbed LLM, cancel/confirm/rate-limit. Playwright smoke lives in `frontend/e2e/` (run via `npm run test:e2e`). |
 
 Integration & e2e tests **automatically skip** when `SMARTSHEET_TOKEN` /
 `SHEET_ID` are not present in `.env`.

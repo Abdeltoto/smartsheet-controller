@@ -55,11 +55,17 @@ scripts/   # optionnel (génération icons) — peut être exclu pour réduire l
 **PowerShell (depuis la racine du repo)** :
 
 ```powershell
-cd extension
-Compress-Archive -Path manifest.json,background.js,sidepanel.html,sidepanel.js,options.html,options.js,oauth-options.js,prompts-browser.html,prompts-browser.js,icons,content,styles -DestinationPath ..\smartsheet-controller-extension.zip -Force
+python extension/scripts/build_store_package.py
+# Sortie : dist/smartsheet-controller-extension-1.3.1.zip
 ```
 
-Ou zip manuel : sélectionne les fichiers/dossiers listés → envoyer vers un fichier compressé → renommer en `.zip`.
+Pour un Controller déployé en HTTPS (origine custom dans le manifest du ZIP) :
+
+```powershell
+python extension/scripts/build_store_package.py --controller-origin https://chat.example.com
+```
+
+Zip manuel (legacy) — sélectionne les fichiers listés ci-dessus, **sans** `store/` ni `scripts/`.
 
 Tester en local :
 

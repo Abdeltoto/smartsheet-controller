@@ -1,0 +1,3 @@
+# Paste the official Chrome Web Store URL here after publication.
+# Example: https://chromewebstore.google.com/detail/smartsheet-controller/XXXXXXXX
+CHROME_WEB_STORE_URL=

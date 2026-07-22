@@ -182,6 +182,8 @@ class TestPromptsEndpoint:
     def test_handles_missing_file(self, http_client, monkeypatch, tmp_path):
         client, bapp = http_client
         bogus = tmp_path / "nope.json"
+        import backend.routes.pages as pages_routes
+        monkeypatch.setattr(pages_routes, "PROMPTS_PATH", bogus)
         monkeypatch.setattr(bapp, "PROMPTS_PATH", bogus)
         r = client.get("/api/prompts")
         assert r.status_code == 404
@@ -191,6 +193,8 @@ class TestPromptsEndpoint:
         client, bapp = http_client
         bad = tmp_path / "bad.json"
         bad.write_text("not json", encoding="utf-8")
+        import backend.routes.pages as pages_routes
+        monkeypatch.setattr(pages_routes, "PROMPTS_PATH", bad)
         monkeypatch.setattr(bapp, "PROMPTS_PATH", bad)
         r = client.get("/api/prompts")
         assert r.status_code == 500
@@ -200,6 +204,8 @@ class TestPromptsEndpoint:
         client, bapp = http_client
         bad = tmp_path / "wrong.json"
         bad.write_text(json.dumps({"version": 1}), encoding="utf-8")
+        import backend.routes.pages as pages_routes
+        monkeypatch.setattr(pages_routes, "PROMPTS_PATH", bad)
         monkeypatch.setattr(bapp, "PROMPTS_PATH", bad)
         r = client.get("/api/prompts")
         assert r.status_code == 500
@@ -232,19 +238,17 @@ class TestHelpPageStaticAssets:
 
 
 INDEX_PAGE = REPO_ROOT / "frontend" / "index.html"
+INDEX_JS = REPO_ROOT / "frontend" / "src" / "legacy" / "app.js"
 
 
 class TestPromptSidebarStaticAssets:
-    """The prompts sidebar lives in `index.html` and surfaces the same
-    `/api/prompts` catalogue as the Help modal, but in a denser, always-
-    at-hand form. These tests pin down the structural contract so a
-    refactor of the chat layout can't silently delete it.
-    """
+    """The prompts sidebar lives in the SPA shell + legacy app bundle."""
 
     @pytest.fixture(scope="class")
     def index_html(self) -> str:
         assert INDEX_PAGE.exists(), f"Missing {INDEX_PAGE}"
-        return INDEX_PAGE.read_text(encoding="utf-8")
+        assert INDEX_JS.exists(), f"Missing {INDEX_JS}"
+        return INDEX_PAGE.read_text(encoding="utf-8") + INDEX_JS.read_text(encoding="utf-8")
 
     def test_sidebar_container_present(self, index_html):
         # The aside lives inside `#chat`, after `.chat-main`.

@@ -19,6 +19,12 @@
 | ☑ | S6 | Coverage Push | **Terminé** | 2026-04-08 | 2026-04-08 | 19 nouveaux tools, 73 au total |
 | ☑ | S7 | Test Harness | **Terminé** | 2026-04-08 | 2026-04-08 | 111 tests (92 unit + 15 integration + 4 e2e), `pytest` vert |
 | ☑ | S7+ | Robustness Pack | **Terminé** | 2026-04-08 | 2026-04-08 | +135 tests : agent loop, dispatch contract 73 tools, MCP smoke, endpoints HTTP complets, webhook entrant, WS cancel/confirm/rate-limit. **246 tests verts (3min38)** |
+| ☑ | S8 | Extension Polish | **Terminé** | 2026-07-22 | 2026-07-22 | Merge `extension/` dans repo principal, sync live side panel, badge clear, embed natif `ssc_ext`, `constants.js` |
+| ☑ | S9 | Pont extension ↔ app | **Terminé** | 2026-07-22 | 2026-07-22 | postMessage bridge, OAuth auto-fill, reload panel, prompts → side panel |
+| ☑ | S10 | Sécurité & auth | **Terminé** | 2026-07-22 | 2026-07-22 | DOMPurify, auth_cookie/ws_token sur routes sensibles, tests session + watch |
+| ☑ | S11 | Frontend modularisation | **Terminé** | 2026-07-22 | 2026-07-22 | Vite build, CSS/JS extraits, index.html 884 lignes, Playwright smoke |
+| ☑ | S12 | Backend structure + CI | **Terminé** | 2026-07-22 | 2026-07-22 | Routers FastAPI modulaires, GitHub Actions CI, 408 unit tests verts |
+| ☑ | S13 | Distribution | **Terminé** | 2026-07-22 | 2026-07-22 | manifest prod, ZIP build, permissions, store kit |
 
 **Légende statut** : `Non démarré` / `En cours` / `En revue` / `Terminé` / `Reporté`
 **Cases** : ☐ à faire · 🟡 en cours · ☑ terminé
@@ -297,6 +303,55 @@ gantt
 
 ---
 
+## Sprint 12 — Backend structure + CI
+
+**Objectif** : découper le monolithe `backend/app.py` en modules testables, corriger les collisions d'imports, et verrouiller la qualité avec une CI GitHub Actions.
+
+### Livrables
+
+- [x] **`backend/core/`** — `state.py` (sessions, watchers, auth), `helpers.py` (errors, providers, API keys)
+- [x] **`backend/services/session.py`** — bootstrap session, welcome dynamique, sheet context
+- [x] **`backend/routes/`** — routers : health, sessions, persistence, webhooks, admin, misc, pages
+- [x] **`backend/ws/chat.py`** — WebSocket handler + watcher loop
+- [x] **`backend/app.py`** — entry point ~95 lignes (lifespan, mounts, re-exports test-compat)
+- [x] Fix collision `sessions` router ↔ dict in-memory (alias `sessions_routes`)
+- [x] Fix shadowing `create_session` route ↔ service (`bootstrap_session`)
+- [x] **`.github/workflows/ci.yml`** — unit + integration + e2e + frontend build + functional runners
+- [x] **`tests/integration/test_functional_runners.py`** — gate scripts `tests/functional/*.py`
+- [x] **`pytest tests/unit -q` → 408 passed**
+
+### Critères d'acceptation
+
+- ✅ Backend modulaire sans régression fonctionnelle
+- ✅ Suite unitaire verte (408 tests)
+- ✅ CI prête pour push/PR (integration/e2e skip sans secrets Smartsheet)
+- ✅ `tests/README.md` compteurs à jour
+
+---
+
+## Sprint 13 — Distribution
+
+**Objectif** : préparer la publication Chrome Web Store — manifest prod, packaging automatisé, permissions justifiées.
+
+### Livrables
+
+- [x] **`manifest.dev.json`** / **`manifest.prod.json`** — dev (localhost host) vs store (Smartsheet + optional localhost)
+- [x] **`permissions.js`** — demande `optional_host_permissions` quand l’utilisateur change l’origine Controller
+- [x] **`extension/scripts/build_store_package.py`** — ZIP Store dans `dist/` ; option `--controller-origin` pour HTTPS prod
+- [x] **`tests/unit/test_extension_manifest.py`** — validation manifests + build ZIP
+- [x] **CI job `extension`** — tests manifest + build ZIP
+- [x] **`extension/store/`** — listing, privacy policy, guide soumission (Phase D kit)
+- [ ] **Soumission manuelle** — compte développeur Chrome, screenshots, URL privacy HTTPS, upload ZIP
+
+### Critères d'acceptation
+
+- ✅ `python extension/scripts/build_store_package.py` produit un ZIP valide
+- ✅ Manifest prod : `host_permissions` limité à Smartsheet ; localhost en optional
+- ✅ Tests unit extension verts ; CI job extension
+- ☐ Publication Store (action manuelle utilisateur)
+
+---
+
 ## Journal de bord
 
 Format : date — sprint — ce qui a été fait — bloqueurs.
@@ -334,6 +389,10 @@ Format : date — sprint — ce qui a été fait — bloqueurs.
 | 2026-04-08 | S7+ | Integration (+26) : `test_app_endpoints_full.py` couvre `/api/usage`, `/api/disconnect` (idempotent), `/api/favorites/*` (lifecycle complet + idempotence), `/api/conversations/*` (save/list/get/delete + migration localStorage avec rejet roles invalides/contenu vide), `/api/audit`, `/api/export` (RGPD), `/api/switch-model` (intra-provider + provider inconnu), `/api/pin-sheet`, `/api/webhook-events`, `/api/csv-to-sheet` (validation + cycle complet avec cleanup tolérant), `/api/smartsheet-webhook` (challenge + payload réel + fan-out par session + persistance anonyme), `/api/generate-title`, `/api/quick-connect`. | `/api/usage` retourne 400 (pas 200) sur session inconnue → expectation corrigée. |
 | 2026-04-08 | S7+ | E2E (+5) : `test_websocket_advanced.py` — cancel mid-stream (slow_stream + `{type:cancel}` → `{type:cancelled}`), confirm/reject de tool destructif via WS (`delete_rows` scriptée, vérification que `execute_tool` est ou n'est PAS appelé), rate-limit WS (monkeypatch `check_limit` → message "Slow down" attendu), conversation multi-tour dans la même connexion (echo stream). | — |
 | 2026-04-08 | S7+ | Robustness Pack **terminé** : `pytest -q` → **246 passed in 3min38**, 0 régression, 0 erreur lint, `tests/README.md` mis à jour (compteurs par layer + couverture exhaustive). Couverture pratique : agent loop, dispatch contract, MCP smoke, tous les endpoints HTTP, webhook entrant, scénarios WS avancés. | — |
+| 2026-07-22 | S13 | Sprint 13 **terminé** : `manifest.prod.json`, build ZIP (`build_store_package.py`), `permissions.js`, tests manifest, CI extension, kit `store/`. Soumission CWS reste manuelle. | — |
+| 2026-07-22 | S12 | Sprint 12 **terminé** : backend découpé (core/services/routes/ws), collision `sessions` corrigée, CI GitHub Actions, 408 unit tests verts, gate functional runners. | — |
+| 2026-07-22 | S11 | Sprint 11 **terminé** : pipeline Vite (`frontend/package.json`), CSS → `src/styles/main.css`, JS → `src/legacy/app.js` + `src/main.js`, build `frontend/dist/`, backend sert dist si présent, Playwright smoke (2 tests). `index.html` réduit de ~7800 → 884 lignes. | — |
+| 2026-07-22 | S10 | Sprint 10 **terminé** : DOMPurify sur rendu Markdown, `_resolve_session()` (ws_token / auth_cookie), routes sensibles protégées (disconnect, export, audit, migrate, delete, csv), tests unit `test_session_auth` + `test_watch_mode`. | — |
 |  |  |  |  |
 
 ---

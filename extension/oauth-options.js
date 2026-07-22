@@ -1,15 +1,8 @@
 /** Optional Smartsheet OAuth via chrome.identity + server /exchange */
 
-const STORAGE_TOKEN = 'smartsheet_oauth_access_token';
+import { getStoredOrigin, OAUTH_TOKEN_KEY } from './constants.js';
 
-async function getBaseUrl() {
-  const { controllerOrigin } = await chrome.storage.sync.get({
-    controllerOrigin: 'http://127.0.0.1:8100',
-  });
-  let base = String(controllerOrigin || 'http://127.0.0.1:8100').trim();
-  if (!/^https?:\/\//i.test(base)) base = 'http://127.0.0.1:8100';
-  return base.replace(/\/$/, '');
-}
+const STORAGE_TOKEN = OAUTH_TOKEN_KEY;
 
 function $(id) {
   return document.getElementById(id);
@@ -19,7 +12,7 @@ async function renderOAuthSection() {
   const mount = $('oauth-mount');
   if (!mount) return;
 
-  const base = await getBaseUrl();
+  const base = await getStoredOrigin();
   const redirectDefault = chrome.identity.getRedirectURL();
 
   try {
@@ -129,6 +122,7 @@ async function runOAuthFlow(base, cfg) {
       await chrome.storage.local.set({ [STORAGE_TOKEN]: tok });
       out.value = tok;
       resEl.style.display = 'block';
+      chrome.runtime.sendMessage({ type: 'oauth_token_updated' }).catch(() => {});
     } catch (e) {
       errEl.textContent = e && e.message ? e.message : String(e);
       errEl.style.display = 'block';
@@ -140,10 +134,10 @@ function openPromptsBrowser() {
   chrome.tabs.create({ url: chrome.runtime.getURL('prompts-browser.html') });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+export function initOAuthOptions() {
   renderOAuthSection();
   $('open-prompts')?.addEventListener('click', (e) => {
     e.preventDefault();
     openPromptsBrowser();
   });
-});
+}

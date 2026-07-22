@@ -196,11 +196,13 @@ def http_bug(monkeypatch, tmp_path):
     # Re-import db & app so our env vars are picked up at module load.
     import backend.db as ssdb
     importlib.reload(ssdb)
+    import backend.routes.admin as admin_routes
     import backend.app as bapp
     importlib.reload(bapp)
 
     # Force the redirected paths even though reload should have done it.
-    bapp.BUG_REPORTS_JSONL = Path(str(jsonl_file))
+    admin_routes.BUG_REPORTS_JSONL = Path(str(jsonl_file))
+    bapp.BUG_REPORTS_JSONL = admin_routes.BUG_REPORTS_JSONL
     ssdb.DB_PATH = db_file
     ssdb._initialized = False
 
@@ -336,9 +338,11 @@ class TestBugReportEndpointAdmin:
 
         import backend.db as ssdb
         importlib.reload(ssdb)
+        import backend.routes.admin as admin_routes
         import backend.app as bapp
         importlib.reload(bapp)
-        bapp.BUG_REPORTS_JSONL = Path(str(jsonl_file))
+        admin_routes.BUG_REPORTS_JSONL = Path(str(jsonl_file))
+        bapp.BUG_REPORTS_JSONL = admin_routes.BUG_REPORTS_JSONL
         ssdb.DB_PATH = db_file
         ssdb._initialized = False
 
